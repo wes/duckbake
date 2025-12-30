@@ -1,7 +1,100 @@
-# Tauri + React + Typescript
+# DuckBake
 
-This template should help get you started developing with Tauri, React and Typescript in Vite.
+A desktop app for local data analysis powered by DuckDB and AI. Query your data with SQL or natural language—everything stays on your Mac.
 
-## Recommended IDE Setup
+## Features
 
-- [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+- **DuckDB-Powered Analytics** - Lightning-fast analytical queries on local data. Handle millions of rows with ease.
+- **AI Chat Interface** - Ask questions in plain English and get SQL queries generated instantly via Ollama.
+- **100% Private** - Your data never leaves your device. No cloud, no accounts, no data collection.
+- **Import Anything** - CSV, JSON, Excel, and Parquet files. Drag and drop to create queryable tables.
+- **SQL Editor** - Full-featured editor with syntax highlighting for writing and running queries.
+- **Native macOS App** - Built with Tauri for a small footprint and native performance.
+
+## Requirements
+
+- macOS 13.0 or later
+- [Ollama](https://ollama.ai) (optional, for AI features)
+
+## Installation
+
+Download the latest release from the [Releases page](https://github.com/wes/duckbake/releases/latest).
+
+The DMG includes a universal binary that runs natively on both Intel and Apple Silicon Macs.
+
+## Development
+
+### Prerequisites
+
+- [Bun](https://bun.sh) (latest)
+- [Rust](https://rustup.rs) (stable)
+- Xcode Command Line Tools
+
+### Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/wes/duckbake.git
+cd duckbake
+
+# Install dependencies
+bun install
+
+# Run in development mode
+bun tauri dev
+```
+
+### Build
+
+```bash
+# Build for current architecture
+bun run release
+
+# Build universal macOS binary (Intel + Apple Silicon)
+bun run release:mac
+```
+
+## Tech Stack
+
+**Frontend**
+- React 19
+- TypeScript
+- Tailwind CSS 4
+- Vite
+- CodeMirror (SQL editor)
+- Recharts (visualizations)
+- Zustand (state management)
+
+**Backend**
+- Rust
+- Tauri 2
+- DuckDB
+- Tokio (async runtime)
+
+**AI**
+- Ollama (local LLM inference)
+
+## Project Structure
+
+```
+duckbake/
+├── src/                  # React frontend
+│   ├── components/       # UI components
+│   ├── pages/            # App pages
+│   ├── stores/           # Zustand stores
+│   └── types/            # TypeScript types
+├── src-tauri/            # Rust backend
+│   └── src/
+│       ├── commands/     # Tauri commands
+│       ├── models/       # Data models
+│       └── services/     # Business logic
+└── website/              # Marketing website
+```
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+MIT
