@@ -18,7 +18,7 @@ A desktop app for local data analysis powered by DuckDB and AI. Query your data 
 
 ## Installation
 
-Download the latest release from the [Releases page](https://github.com/wes/duckbake/releases/latest).
+[Download the latest release](https://github.com/wes/duckbake/releases/latest/download/DuckBake-macOS.dmg) or browse all releases on the [Releases page](https://github.com/wes/duckbake/releases).
 
 The DMG includes a universal binary that runs natively on both Intel and Apple Silicon Macs.
 

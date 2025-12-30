@@ -55,6 +55,12 @@ jobs:
         with:
           path: artifacts
 
+      - name: Create stable download link
+        run: |
+          # Find the versioned DMG and copy it to a stable name
+          DMG_FILE=$(find artifacts -name "*.dmg" | head -1)
+          cp "$DMG_FILE" artifacts/DuckBake-macOS.dmg
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
@@ -62,3 +68,4 @@ jobs:
           generate_release_notes: true
           files: |
             artifacts/**/*.dmg
+            artifacts/DuckBake-macOS.dmg

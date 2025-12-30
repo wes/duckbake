@@ -368,7 +368,7 @@ function Download() {
 
 				<div className="flex justify-center mb-8">
 					<Button size="lg" asChild>
-						<a href="https://github.com/wes/duckbake/releases/latest">
+						<a href="https://github.com/wes/duckbake/releases/latest/download/DuckBake-macOS.dmg">
 							<Apple className="w-4 h-4 mr-2" />
 							Download for macOS
 						</a>
