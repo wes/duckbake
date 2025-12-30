@@ -58,7 +58,7 @@ function NavBar() {
 					</a>
 				</div>
 				<Button asChild>
-					<a href="#download">
+					<a href="https://github.com/wes/duckbake/releases/latest/download/DuckBake-macOS.dmg">
 						<Apple className="w-4 h-4" />
 						Download for Mac
 					</a>
@@ -100,7 +100,7 @@ function Hero() {
 
 					<div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
 						<Button size="lg" asChild>
-							<a href="#download">
+							<a href="https://github.com/wes/duckbake/releases/latest/download/DuckBake-macOS.dmg">
 								<Apple className="w-4 h-4" />
 								Download for Mac
 							</a>
