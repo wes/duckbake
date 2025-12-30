@@ -7,7 +7,11 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "release": "tauri build",
+    "release:mac": "tauri build --target universal-apple-darwin",
+    "release:mac-arm": "tauri build --target aarch64-apple-darwin",
+    "release:mac-intel": "tauri build --target x86_64-apple-darwin"
   },
   "dependencies": {
     "@catppuccin/codemirror": "^1.0.1",
