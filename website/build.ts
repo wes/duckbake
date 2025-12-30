@@ -129,6 +129,11 @@ const result = await Bun.build({
   minify: true,
   target: "browser",
   sourcemap: "linked",
+  naming: {
+    chunk: "[name]-[hash].[ext]",
+    entry: "[dir]/[name].[ext]",
+    asset: "[name]-[hash].[ext]",
+  },
   define: {
     "process.env.NODE_ENV": JSON.stringify("production"),
   },

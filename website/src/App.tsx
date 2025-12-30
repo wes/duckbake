@@ -18,6 +18,7 @@ import {
 	Table,
 	Lock,
 	Apple,
+	Github,
 } from "lucide-react";
 import "./index.css";
 import duckbakeLogo from "./duckbake.png";
@@ -46,6 +47,14 @@ function NavBar() {
 						className="text-muted-foreground hover:text-foreground transition-colors"
 					>
 						How it Works
+					</a>
+					<a
+						href="https://github.com/wes/duckbake"
+						className="text-muted-foreground hover:text-foreground transition-colors"
+						target="_blank"
+						rel="noopener noreferrer"
+					>
+						<Github className="w-5 h-5" />
 					</a>
 				</div>
 				<Button asChild>
@@ -385,10 +394,10 @@ function Footer() {
 						<span className="font-bold text-lg">DuckBake</span>
 					</div>
 					<div className="flex items-center gap-8 text-sm text-muted-foreground">
-						<a href="#" className="hover:text-foreground transition-colors">
+						<a href="/privacy" className="hover:text-foreground transition-colors">
 							Privacy Policy
 						</a>
-						<a href="#" className="hover:text-foreground transition-colors">
+						<a href="/terms" className="hover:text-foreground transition-colors">
 							Terms of Service
 						</a>
 						<a

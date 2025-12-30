@@ -1,8 +1,12 @@
 import { serve } from "bun";
 import index from "./index.html";
+import terms from "./terms.html";
+import privacy from "./privacy.html";
 
 const server = serve({
   routes: {
+    "/terms": terms,
+    "/privacy": privacy,
     // Serve index.html for all unmatched routes.
     "/*": index,
 
