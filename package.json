@@ -10,7 +10,10 @@
     "tauri": "tauri",
     "dev:website": "cd website && bun dev",
     "deploy:website": "cd website && fly deploy",
-    "release": "tauri build",
+    "release": "bun scripts/release.ts",
+    "release:major": "bun scripts/release.ts major",
+    "release:minor": "bun scripts/release.ts minor",
+    "build:release": "tauri build",
     "release:mac": "tauri build --target universal-apple-darwin",
     "release:mac-arm": "tauri build --target aarch64-apple-darwin",
     "release:mac-intel": "tauri build --target x86_64-apple-darwin"
