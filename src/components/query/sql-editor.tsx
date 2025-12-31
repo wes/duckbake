@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { DataGrid } from "@/components/database";
-import { useAppStore } from "@/stores";
+import { useAppStore, useProjectStore } from "@/stores";
 import {
   executeQuery,
   listSavedQueries,
@@ -24,8 +24,25 @@ interface SqlEditorProps {
 }
 
 export function SqlEditor({ projectId }: SqlEditorProps) {
-  const [query, setQuery] = useState("SELECT * FROM ");
+  // Use store for query persistence across tab navigation
+  const storeQuery = useProjectStore((s) => s.getQuery(projectId));
+  const setStoreQuery = useProjectStore((s) => s.setQuery);
+  const [query, setLocalQuery] = useState(storeQuery);
   const [result, setResult] = useState<QueryResult | null>(null);
+
+  // Sync local state with store
+  const setQuery = useCallback(
+    (value: string) => {
+      setLocalQuery(value);
+      setStoreQuery(projectId, value);
+    },
+    [projectId, setStoreQuery]
+  );
+
+  // Initialize from store when projectId changes
+  useEffect(() => {
+    setLocalQuery(storeQuery);
+  }, [projectId, storeQuery]);
   const [isDark, setIsDark] = useState(() =>
     document.documentElement.classList.contains("dark")
   );

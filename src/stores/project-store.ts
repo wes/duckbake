@@ -12,31 +12,44 @@ interface QueryHistoryItem {
 interface ProjectState {
   currentProject: Project | null;
   selectedTable: string | null;
-  currentQuery: string;
+  // Map of projectId -> SQL query text
+  projectQueries: Record<string, string>;
   queryHistory: QueryHistoryItem[];
 
   setCurrentProject: (project: Project | null) => void;
   selectTable: (table: string | null) => void;
-  setQuery: (query: string) => void;
+  setQuery: (projectId: string, query: string) => void;
+  getQuery: (projectId: string) => string;
   addToHistory: (item: QueryHistoryItem) => void;
   clearHistory: () => void;
 }
 
-export const useProjectStore = create<ProjectState>((set) => ({
+const DEFAULT_QUERY = "SELECT * FROM ";
+
+export const useProjectStore = create<ProjectState>((set, get) => ({
   currentProject: null,
   selectedTable: null,
-  currentQuery: "",
+  projectQueries: {},
   queryHistory: [],
 
   setCurrentProject: (project) =>
     set({
       currentProject: project,
       selectedTable: null,
-      currentQuery: "",
       queryHistory: [],
     }),
   selectTable: (table) => set({ selectedTable: table }),
-  setQuery: (query) => set({ currentQuery: query }),
+  setQuery: (projectId, query) =>
+    set((state) => ({
+      projectQueries: {
+        ...state.projectQueries,
+        [projectId]: query,
+      },
+    })),
+  getQuery: (projectId) => {
+    const state = get();
+    return state.projectQueries[projectId] ?? DEFAULT_QUERY;
+  },
   addToHistory: (item) =>
     set((state) => ({
       queryHistory: [item, ...state.queryHistory].slice(0, 100),
