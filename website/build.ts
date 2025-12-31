@@ -107,9 +107,7 @@ const formatFileSize = (bytes: number): string => {
 
 console.log("\n🚀 Starting build process...\n");
 
-// Generate OG image and favicons
-console.log("🖼️  Generating OG image...");
-await import("./scripts/generate-og-image.ts");
+// Generate favicons
 console.log("🔷 Generating favicons...");
 await import("./scripts/generate-favicons.ts");
 
