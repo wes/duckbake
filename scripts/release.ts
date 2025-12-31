@@ -54,6 +54,18 @@ function updateCargoToml(version: string) {
   console.log(`  Updated ${path}`);
 }
 
+function updateChangelog(version: string) {
+  console.log("\nGenerating changelog...");
+  try {
+    // Generate changelog with the new tag (git-cliff will include it)
+    execSync(`git cliff --tag v${version} -o CHANGELOG.md`, { cwd: ROOT, stdio: "inherit" });
+    console.log("  Updated CHANGELOG.md");
+  } catch (error) {
+    console.warn("  Warning: Could not generate changelog. Is git-cliff installed?");
+    console.warn("  Install with: brew install git-cliff");
+  }
+}
+
 function gitCommitAndTag(version: string) {
   const tag = `v${version}`;
 
@@ -95,6 +107,7 @@ function main() {
   updatePackageJson(newVersion);
   updateTauriConf(newVersion);
   updateCargoToml(newVersion);
+  updateChangelog(newVersion);
 
   gitCommitAndTag(newVersion);
 

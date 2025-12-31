@@ -9,6 +9,7 @@ interface AppState {
   selectedInferenceModel: string | null;
   selectedEmbeddingModel: string | null;
   pendingSql: string | null;
+  showNewProjectDialog: boolean;
 
   toggleSidebar: () => void;
   setSidebarOpen: (open: boolean) => void;
@@ -18,6 +19,7 @@ interface AppState {
   setEmbeddingModel: (model: string | null) => void;
   setPendingSql: (sql: string | null) => void;
   openInQueryEditor: (sql: string) => void;
+  setShowNewProjectDialog: (show: boolean) => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -27,6 +29,7 @@ export const useAppStore = create<AppState>((set) => ({
   selectedInferenceModel: null,
   selectedEmbeddingModel: null,
   pendingSql: null,
+  showNewProjectDialog: false,
 
   toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
   setSidebarOpen: (open) => set({ sidebarOpen: open }),
@@ -36,4 +39,5 @@ export const useAppStore = create<AppState>((set) => ({
   setEmbeddingModel: (model) => set({ selectedEmbeddingModel: model }),
   setPendingSql: (sql) => set({ pendingSql: sql }),
   openInQueryEditor: (sql) => set({ pendingSql: sql, activeTab: "query" }),
+  setShowNewProjectDialog: (show) => set({ showNewProjectDialog: show }),
 }));

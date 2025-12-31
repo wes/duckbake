@@ -55,6 +55,8 @@ pub async fn query_table(
     table_name: String,
     page: u32,
     page_size: u32,
+    order_by: Option<String>,
+    order_desc: Option<bool>,
 ) -> Result<QueryResult> {
     let storage = state.storage.lock();
     let project = storage.get_project(&project_id)?;
@@ -63,7 +65,7 @@ pub async fn query_table(
 
     let conn = state.duckdb.get_connection(&project_id, &db_path)?;
     let conn = conn.lock();
-    state.duckdb.query_table(&conn, &table_name, page, page_size)
+    state.duckdb.query_table(&conn, &table_name, page, page_size, order_by.as_deref(), order_desc.unwrap_or(false))
 }
 
 #[tauri::command]

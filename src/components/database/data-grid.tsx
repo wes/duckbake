@@ -7,15 +7,23 @@ import {
   type ColumnDef,
 } from "@tanstack/react-table";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { ArrowUp, ArrowDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+export interface SortState {
+  column: string;
+  desc: boolean;
+}
 
 interface DataGridProps {
   columns: string[];
   rows: Record<string, unknown>[];
   isLoading?: boolean;
+  sort?: SortState | null;
+  onSort?: (column: string) => void;
 }
 
-export function DataGrid({ columns, rows, isLoading }: DataGridProps) {
+export function DataGrid({ columns, rows, isLoading, sort, onSort }: DataGridProps) {
   const tableContainerRef = useRef<HTMLDivElement>(null);
 
   // Create column definitions dynamically
@@ -95,20 +103,38 @@ export function DataGrid({ columns, rows, isLoading }: DataGridProps) {
         <thead className="sticky top-0 z-10">
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id} className="bg-muted border-b">
-              {headerGroup.headers.map((header) => (
-                <th
-                  key={header.id}
-                  className="px-3 py-2 text-left font-medium text-muted-foreground whitespace-nowrap border-r last:border-r-0"
-                  style={{ width: header.getSize() }}
-                >
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
+              {headerGroup.headers.map((header) => {
+                const columnId = header.column.id;
+                const isSorted = sort?.column === columnId;
+                const canSort = !!onSort;
+                return (
+                  <th
+                    key={header.id}
+                    className={cn(
+                      "px-3 py-2 text-left font-medium text-muted-foreground whitespace-nowrap border-r last:border-r-0",
+                      canSort && "cursor-pointer select-none hover:bg-muted-foreground/10 hover:text-foreground transition-colors"
+                    )}
+                    style={{ width: header.getSize() }}
+                    onClick={() => onSort?.(columnId)}
+                  >
+                    <div className="flex items-center gap-1">
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                      {isSorted && (
+                        sort.desc ? (
+                          <ArrowDown className="h-3 w-3 shrink-0" />
+                        ) : (
+                          <ArrowUp className="h-3 w-3 shrink-0" />
+                        )
                       )}
-                </th>
-              ))}
+                    </div>
+                  </th>
+                );
+              })}
             </tr>
           ))}
         </thead>

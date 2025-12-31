@@ -6,6 +6,13 @@ import remarkGfm from "remark-gfm";
 import { Bot, User, AlertCircle, Loader2, Plus, MessageSquare, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ChatInput } from "./chat-input";
 import { DataVisualization, type VisualizationConfig, type VizType } from "./data-visualization";
 import { useChatStore } from "@/stores";
@@ -106,6 +113,37 @@ function buildContextString(
 export function ChatPanel({ projectId }: ChatPanelProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [selectedModel, setSelectedModel] = useState<string>("");
+  const [sidebarWidth, setSidebarWidth] = useState(224);
+  const isResizing = useRef(false);
+
+  const startResizing = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    isResizing.current = true;
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+  }, []);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isResizing.current) return;
+      const newWidth = Math.min(Math.max(e.clientX - 256, 150), 400);
+      setSidebarWidth(newWidth);
+    };
+
+    const handleMouseUp = () => {
+      isResizing.current = false;
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, []);
   const queryClient = useQueryClient();
 
   const {
@@ -123,6 +161,7 @@ export function ChatPanel({ projectId }: ChatPanelProps) {
     startStreaming,
     appendToStreaming,
     finalizeStreaming,
+    resetForProject,
   } = useChatStore();
 
   const { data: ollamaStatus } = useQuery({
@@ -164,6 +203,16 @@ export function ChatPanel({ projectId }: ChatPanelProps) {
 
   // State to store visualization results for the current streaming message
   const [vizResults, setVizResults] = useState<Map<string, { config: VisualizationConfig; result?: QueryResult; error?: string; sql: string }[]>>(new Map());
+
+  // Reset chat state when project changes
+  const prevProjectId = useRef(projectId);
+  useEffect(() => {
+    if (prevProjectId.current !== projectId) {
+      resetForProject();
+      setVizResults(new Map());
+      prevProjectId.current = projectId;
+    }
+  }, [projectId, resetForProject]);
 
   // Generate a smart title from the user's message
   const generateSmartTitle = (userMessage: string): string => {
@@ -241,7 +290,7 @@ export function ChatPanel({ projectId }: ChatPanelProps) {
         } catch (error) {
           results.push({
             config: { type: block.viz },
-            error: error instanceof Error ? error.message : "Query failed",
+            error: error instanceof Error ? error.message : String(error),
             sql: block.sql,
           });
         }
@@ -336,7 +385,7 @@ export function ChatPanel({ projectId }: ChatPanelProps) {
         } catch (error) {
           results.push({
             config: { type: block.viz },
-            error: error instanceof Error ? error.message : "Query failed",
+            error: error instanceof Error ? error.message : String(error),
             sql: block.sql,
           });
         }
@@ -475,7 +524,10 @@ export function ChatPanel({ projectId }: ChatPanelProps) {
   return (
     <div className="h-full flex overflow-hidden">
       {/* Conversations sidebar */}
-      <div className="w-56 border-r flex flex-col shrink-0">
+      <div
+        className="border-r flex flex-col shrink-0"
+        style={{ width: sidebarWidth }}
+      >
         <div className="p-3 border-b">
           <Button
             variant="outline"
@@ -520,33 +572,58 @@ export function ChatPanel({ projectId }: ChatPanelProps) {
           </div>
         </ScrollArea>
       </div>
+      {/* Resize handle */}
+      <div
+        className="w-1 cursor-col-resize hover:bg-primary/50 active:bg-primary transition-colors shrink-0"
+        onMouseDown={startResizing}
+      />
 
       {/* Main chat area */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Chat header with delete option */}
-        {currentConversationId && (
-          <div className="h-12 border-b flex items-center justify-between px-4 shrink-0">
-            <div className="flex items-center gap-2 text-sm">
-              <MessageSquare className="h-4 w-4 text-muted-foreground" />
-              <span className="font-medium truncate max-w-[300px]">
-                {conversations.find(c => c.id === currentConversationId)?.title || "Chat"}
-              </span>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-muted-foreground hover:text-destructive"
-              onClick={() => {
-                if (confirm("Delete this conversation?")) {
-                  deleteConvo.mutate(currentConversationId);
-                }
-              }}
-            >
-              <Trash2 className="h-4 w-4 mr-1" />
-              Delete
-            </Button>
+        {/* Chat header with model select and delete option */}
+        <div className="h-12 border-b flex items-center justify-between px-4 shrink-0">
+          <div className="flex items-center gap-2 text-sm">
+            {currentConversationId ? (
+              <>
+                <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                <span className="font-medium truncate max-w-[300px]">
+                  {conversations.find(c => c.id === currentConversationId)?.title || "Chat"}
+                </span>
+              </>
+            ) : (
+              <span className="text-muted-foreground">New conversation</span>
+            )}
           </div>
-        )}
+          <div className="flex items-center gap-2">
+            <Select value={selectedModel} onValueChange={setSelectedModel}>
+              <SelectTrigger className="w-40 h-8 text-xs">
+                <SelectValue placeholder="Select model" />
+              </SelectTrigger>
+              <SelectContent>
+                {models.map((model) => (
+                  <SelectItem key={model.name} value={model.name} className="text-xs">
+                    {model.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {currentConversationId && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground hover:text-destructive"
+                onClick={() => {
+                  if (confirm("Delete this conversation?")) {
+                    deleteConvo.mutate(currentConversationId);
+                  }
+                }}
+              >
+                <Trash2 className="h-4 w-4 mr-1" />
+                Delete
+              </Button>
+            )}
+          </div>
+        </div>
 
         {/* Messages */}
         <div className="flex-1 min-h-0 overflow-y-auto" ref={scrollRef}>
@@ -587,13 +664,7 @@ export function ChatPanel({ projectId }: ChatPanelProps) {
         </div>
 
         {/* Input */}
-        <ChatInput
-          onSend={handleSend}
-          disabled={isStreaming}
-          models={models}
-          selectedModel={selectedModel}
-          onModelChange={setSelectedModel}
-        />
+        <ChatInput onSend={handleSend} disabled={isStreaming} />
       </div>
     </div>
   );
@@ -630,14 +701,14 @@ function MessageBubble({ message, visualizations }: MessageBubbleProps) {
         }`}
       >
         {isUser ? (
-          <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+          <p className="text-base whitespace-pre-wrap">{message.content}</p>
         ) : (
           <div className="space-y-4">
             {displayContent && <MarkdownContent content={displayContent} />}
             {visualizations?.map((viz, i) => (
               <div key={i}>
                 {viz.error ? (
-                  <div className="bg-destructive/10 text-destructive rounded-lg p-3 text-sm">
+                  <div className="bg-destructive/10 text-destructive rounded-lg p-3 text-base">
                     <strong>Query Error:</strong> {viz.error}
                   </div>
                 ) : viz.result ? (
@@ -654,13 +725,13 @@ function MessageBubble({ message, visualizations }: MessageBubbleProps) {
 
 function MarkdownContent({ content }: { content: string }) {
   return (
-    <div className="text-sm prose prose-sm dark:prose-invert max-w-none prose-p:my-2 prose-headings:my-3 prose-ul:my-2 prose-ol:my-2 prose-li:my-0 prose-pre:my-2 prose-pre:p-0 prose-pre:bg-transparent">
+    <div className="text-base prose prose-base dark:prose-invert max-w-none prose-p:my-2 prose-headings:my-3 prose-ul:my-2 prose-ol:my-2 prose-li:my-0 prose-pre:my-2 prose-pre:p-0 prose-pre:bg-transparent">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
           // Code blocks
           pre: ({ children }) => (
-            <pre className="bg-background/50 border rounded-md p-3 overflow-x-auto text-xs">
+            <pre className="bg-background/50 border rounded-md p-3 overflow-x-auto text-sm">
               {children}
             </pre>
           ),
@@ -671,7 +742,7 @@ function MarkdownContent({ content }: { content: string }) {
               return <code className="block">{children}</code>;
             }
             return (
-              <code className="bg-background/50 px-1.5 py-0.5 rounded text-xs font-mono" {...props}>
+              <code className="bg-background/50 px-1.5 py-0.5 rounded text-sm font-mono" {...props}>
                 {children}
               </code>
             );
@@ -679,7 +750,7 @@ function MarkdownContent({ content }: { content: string }) {
           // Tables
           table: ({ children }) => (
             <div className="overflow-x-auto my-3">
-              <table className="min-w-full border-collapse border border-border text-xs">
+              <table className="min-w-full border-collapse border border-border text-sm">
                 {children}
               </table>
             </div>

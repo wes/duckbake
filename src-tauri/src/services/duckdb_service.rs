@@ -214,11 +214,20 @@ impl DuckDbService {
         table_name: &str,
         page: u32,
         page_size: u32,
+        order_by: Option<&str>,
+        order_desc: bool,
     ) -> Result<QueryResult> {
         let offset = page * page_size;
+        let order_clause = match order_by {
+            Some(col) => {
+                let direction = if order_desc { "DESC" } else { "ASC" };
+                format!(" ORDER BY \"{}\" {}", col.replace("\"", "\"\""), direction)
+            }
+            None => String::new(),
+        };
         let sql = format!(
-            "SELECT * FROM \"{}\" LIMIT {} OFFSET {}",
-            table_name, page_size, offset
+            "SELECT * FROM \"{}\"{}  LIMIT {} OFFSET {}",
+            table_name, order_clause, page_size, offset
         );
         self.execute_query(conn, &sql)
     }

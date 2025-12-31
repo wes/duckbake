@@ -2,17 +2,16 @@ import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { Plus, Database, Trash2, FolderOpen, Table2, Rows3, MessageSquare, FileCode, Moon, Sun, Pencil } from "lucide-react";
+import {
+	Plus,
+	Database,
+	Trash2,
+	Moon,
+	Sun,
+	Pencil,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
 import {
 	Dialog,
 	DialogContent,
@@ -24,7 +23,14 @@ import {
 } from "@/components/ui/dialog";
 import { SettingsDialog } from "@/components/settings";
 import { useThemeStore } from "@/stores/theme-store";
-import { listProjects, createProject, deleteProject, updateProject, getAllProjectStats } from "@/lib/tauri";
+import { useAppStore } from "@/stores";
+import {
+	listProjects,
+	createProject,
+	deleteProject,
+	updateProject,
+	getAllProjectStats,
+} from "@/lib/tauri";
 import type { CreateProjectInput, ProjectStats, ProjectSummary } from "@/types";
 
 export function HomePage() {
@@ -33,13 +39,27 @@ export function HomePage() {
 	const [isCreateOpen, setIsCreateOpen] = useState(false);
 	const [settingsOpen, setSettingsOpen] = useState(false);
 	const { mode } = useThemeStore();
-	const isDark = mode === "dark" || (mode === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+	const showNewProjectDialog = useAppStore((s) => s.showNewProjectDialog);
+	const setShowNewProjectDialog = useAppStore((s) => s.setShowNewProjectDialog);
+
+	// Combine local and store state for dialog
+	const dialogOpen = isCreateOpen || showNewProjectDialog;
+	const setDialogOpen = (open: boolean) => {
+		setIsCreateOpen(open);
+		setShowNewProjectDialog(open);
+	};
+	const isDark =
+		mode === "dark" ||
+		(mode === "system" &&
+			window.matchMedia("(prefers-color-scheme: dark)").matches);
 	const [newProject, setNewProject] = useState<CreateProjectInput>({
 		name: "",
 		description: "",
 	});
-	const [editingProject, setEditingProject] = useState<ProjectSummary | null>(null);
-	const [editForm, setEditForm] = useState({ name: "", description: "" });
+	const [editingProject, setEditingProject] = useState<ProjectSummary | null>(
+		null,
+	);
+	const [editName, setEditName] = useState("");
 
 	const { data: projects = [], isLoading } = useQuery({
 		queryKey: ["projects"],
@@ -71,7 +91,7 @@ export function HomePage() {
 		onSuccess: (project) => {
 			queryClient.invalidateQueries({ queryKey: ["projects"] });
 			queryClient.invalidateQueries({ queryKey: ["projectStats"] });
-			setIsCreateOpen(false);
+			setDialogOpen(false);
 			setNewProject({ name: "", description: "" });
 			navigate(`/project/${project.id}`);
 		},
@@ -86,11 +106,20 @@ export function HomePage() {
 	});
 
 	const updateMutation = useMutation({
-		mutationFn: ({ id, name, description }: { id: string; name?: string; description?: string }) =>
-			updateProject(id, name, description),
+		mutationFn: ({
+			id,
+			name,
+			description,
+		}: {
+			id: string;
+			name?: string;
+			description?: string;
+		}) => updateProject(id, name, description),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["projects"] });
-			queryClient.invalidateQueries({ queryKey: ["project", editingProject?.id] });
+			queryClient.invalidateQueries({
+				queryKey: ["project", editingProject?.id],
+			});
 			setEditingProject(null);
 		},
 	});
@@ -111,48 +140,47 @@ export function HomePage() {
 	const handleEdit = (e: React.MouseEvent, project: ProjectSummary) => {
 		e.stopPropagation();
 		setEditingProject(project);
-		setEditForm({ name: project.name, description: project.description });
+		setEditName(project.name);
 	};
 
 	const handleUpdate = () => {
-		if (editingProject && editForm.name.trim()) {
+		if (editingProject && editName.trim()) {
 			updateMutation.mutate({
 				id: editingProject.id,
-				name: editForm.name,
-				description: editForm.description,
+				name: editName,
 			});
 		}
 	};
 
 	const handleDrag = async (e: React.MouseEvent) => {
 		const target = e.target as HTMLElement;
-		const interactive = target.closest("button, input, a, [role='button'], [data-radix-collection-item]");
+		const interactive = target.closest(
+			"button, input, a, [role='button'], [data-radix-collection-item]",
+		);
 		if (!interactive) {
 			await getCurrentWindow().startDragging();
 		}
 	};
 
 	return (
-		<div className="min-h-screen mesh-gradient" onMouseDown={handleDrag}>
-			<div className="container mx-auto py-12 px-6" onMouseDown={handleDrag}>
-				<div className="flex items-center justify-between mb-10">
-					<h1 className="text-2xl font-semibold text-foreground/90">Projects</h1>
-					<div className="flex items-center gap-2">
-						<Button
-							variant="ghost"
-							size="icon"
-							onClick={() => setSettingsOpen(true)}
-							className="rounded-xl"
-						>
-							{isDark ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
-						</Button>
-						<Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-							<DialogTrigger asChild>
-								<Button className="glass-button rounded-xl px-5 py-2.5 font-medium">
-									<Plus className="mr-2 h-4 w-4" />
-									New Project
-								</Button>
-							</DialogTrigger>
+		<div className="h-screen flex flex-col" onMouseDown={handleDrag}>
+			{/* Toolbar */}
+			<div
+				className="h-12 border-b flex items-center justify-between px-4 shrink-0 pl-25"
+				onMouseDown={handleDrag}
+			>
+				<h1 className="text-md font-medium text-foreground/90">Projects</h1>
+				<div className="flex items-center gap-3">
+					<span className="text-[10px] font-mono text-muted-foreground/70">
+						v{__APP_VERSION__}
+					</span>
+					<Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+						<DialogTrigger asChild>
+							<Button variant="ghost" className="h-8 px-3 text-sm">
+								<Plus className="mr-1.5 h-3.5 w-3.5" />
+								New Project
+							</Button>
+						</DialogTrigger>
 						<DialogContent>
 							<DialogHeader>
 								<DialogTitle>Create New Project</DialogTitle>
@@ -160,35 +188,24 @@ export function HomePage() {
 									Create a new project to start analyzing your data.
 								</DialogDescription>
 							</DialogHeader>
-							<div className="space-y-4 py-4">
-								<div className="space-y-2">
-									<label className="text-sm font-medium">Project Name</label>
-									<Input
-										placeholder="My Analysis Project"
-										value={newProject.name}
-										onChange={(e) =>
-											setNewProject({ ...newProject, name: e.target.value })
+							<div className="py-4">
+								<Input
+									placeholder="Project name"
+									value={newProject.name}
+									onChange={(e) =>
+										setNewProject({ ...newProject, name: e.target.value })
+									}
+									onKeyDown={(e) => {
+										if (e.key === "Enter" && newProject.name.trim()) {
+											handleCreate();
 										}
-									/>
-								</div>
-								<div className="space-y-2">
-									<label className="text-sm font-medium">Description</label>
-									<Textarea
-										placeholder="What is this project about?"
-										value={newProject.description}
-										onChange={(e) =>
-											setNewProject({
-												...newProject,
-												description: e.target.value,
-											})
-										}
-									/>
-								</div>
+									}}
+								/>
 							</div>
 							<DialogFooter>
 								<Button
 									variant="outline"
-									onClick={() => setIsCreateOpen(false)}
+									onClick={() => setDialogOpen(false)}
 								>
 									Cancel
 								</Button>
@@ -200,116 +217,110 @@ export function HomePage() {
 								</Button>
 							</DialogFooter>
 						</DialogContent>
-						</Dialog>
-					</div>
+					</Dialog>
+					<Button
+						variant="ghost"
+						size="icon"
+						onClick={() => setSettingsOpen(true)}
+						className="h-8 w-8"
+					>
+						{isDark ? (
+							<Moon className="h-4 w-4" />
+						) : (
+							<Sun className="h-4 w-4" />
+						)}
+					</Button>
 				</div>
+			</div>
 
+			{/* Content */}
+			<div className="flex-1 overflow-auto">
 				{isLoading ? (
-					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+					<div>
 						{[1, 2, 3].map((i) => (
-							<Card key={i} className="glass-card animate-pulse">
-								<CardHeader>
-									<div className="h-5 bg-white/5 rounded-lg w-3/4"></div>
-									<div className="h-4 bg-white/5 rounded-lg w-1/2 mt-2"></div>
-								</CardHeader>
-							</Card>
+							<div
+								key={i}
+								className="h-10 border-b animate-pulse flex items-center px-4"
+							>
+								<div className="h-3 bg-muted rounded w-1/4"></div>
+							</div>
 						))}
 					</div>
 				) : projects.length === 0 ? (
-					<Card className="glass-card text-center py-16 max-w-md mx-auto">
-						<CardContent>
-							<div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-primary/10 flex items-center justify-center">
-								<Database className="h-8 w-8 text-primary" />
-							</div>
-							<h3 className="text-xl font-semibold mb-3">No projects yet</h3>
-							<p className="text-muted-foreground mb-6">
-								Create your first project to get started
-							</p>
-							<Button
-								onClick={() => setIsCreateOpen(true)}
-								className="glass-button rounded-xl px-5 py-2.5 font-medium"
-							>
-								<Plus className="mr-2 h-4 w-4" />
-								Create Project
-							</Button>
-						</CardContent>
-					</Card>
+					<div className="flex flex-col items-center justify-center h-full text-center">
+						<Database className="h-12 w-12 text-muted-foreground mb-4" />
+						<h3 className="font-medium mb-1">No projects yet</h3>
+						<p className="text-sm text-muted-foreground mb-4">
+							Create your first project to get started
+						</p>
+						<Button
+							variant="outline"
+							size="sm"
+							onClick={() => setIsCreateOpen(true)}
+						>
+							<Plus className="mr-1.5 h-3.5 w-3.5" />
+							New Project
+						</Button>
+					</div>
 				) : (
-					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+					<div>
+						{/* Table header */}
+						<div className="flex items-center px-4 py-1.5 border-b text-sm text-muted-foreground font-medium sticky top-0">
+							<div className="flex-1">Name</div>
+							<div className="w-16 text-right">Tables</div>
+							<div className="w-16 text-right">Rows</div>
+							<div className="w-16 text-right">Chats</div>
+							<div className="w-16 text-right">Queries</div>
+							<div className="w-24 text-right">Modified</div>
+							<div className="w-16"></div>
+						</div>
+						{/* Table rows */}
 						{projects.map((project) => {
 							const stats = statsMap.get(project.id);
 							return (
-								<Card
+								<div
 									key={project.id}
-									className="glass-card cursor-pointer group"
+									className="flex items-center px-4 py-1.5 border-b hover:bg-muted/50 cursor-pointer group transition-colors"
 									onClick={() => navigate(`/project/${project.id}`)}
 								>
-									<CardHeader className="pb-3">
-										<div className="flex items-start justify-between">
-											<div className="flex items-center gap-3">
-												<div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center">
-													<Database className="h-5 w-5 text-primary" />
-												</div>
-												<CardTitle className="text-lg font-semibold">{project.name}</CardTitle>
-											</div>
-											<div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-												<Button
-													variant="ghost"
-													size="icon"
-													className="h-8 w-8 rounded-lg hover:bg-white/10"
-													onClick={(e) => {
-														e.stopPropagation();
-														navigate(`/project/${project.id}`);
-													}}
-												>
-													<FolderOpen className="h-4 w-4" />
-												</Button>
-												<Button
-													variant="ghost"
-													size="icon"
-													className="h-8 w-8 rounded-lg hover:bg-white/10"
-													onClick={(e) => handleEdit(e, project)}
-												>
-													<Pencil className="h-4 w-4" />
-												</Button>
-												<Button
-													variant="ghost"
-													size="icon"
-													className="h-8 w-8 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10"
-													onClick={(e) => handleDelete(e, project.id)}
-												>
-													<Trash2 className="h-4 w-4" />
-												</Button>
-											</div>
-										</div>
-										<CardDescription className="line-clamp-2 mt-2 text-muted-foreground/80">
-											{project.description || "No description"}
-										</CardDescription>
-									</CardHeader>
-									<CardContent className="pt-0">
-										<div className="flex items-center gap-4 text-xs text-muted-foreground/70 mb-3 py-3 px-3 -mx-3 rounded-xl bg-white/[0.03]">
-											<div className="flex items-center gap-1.5" title="Tables">
-												<Table2 className="h-3.5 w-3.5" />
-												<span className="font-medium">{stats ? formatNumber(stats.tableCount) : "-"}</span>
-											</div>
-											<div className="flex items-center gap-1.5" title="Total rows">
-												<Rows3 className="h-3.5 w-3.5" />
-												<span className="font-medium">{stats ? formatNumber(stats.totalRows) : "-"}</span>
-											</div>
-											<div className="flex items-center gap-1.5" title="Conversations">
-												<MessageSquare className="h-3.5 w-3.5" />
-												<span className="font-medium">{stats ? formatNumber(stats.conversationCount) : "-"}</span>
-											</div>
-											<div className="flex items-center gap-1.5" title="Saved queries">
-												<FileCode className="h-3.5 w-3.5" />
-												<span className="font-medium">{stats ? formatNumber(stats.savedQueryCount) : "-"}</span>
-											</div>
-										</div>
-										<p className="text-xs text-muted-foreground/60">
-											Updated {new Date(project.updatedAt).toLocaleDateString()}
-										</p>
-									</CardContent>
-								</Card>
+									<div className="flex-1 flex items-center gap-2 min-w-0">
+										<Database className="h-4 w-4 text-primary shrink-0" />
+										<span className="text-sm truncate">{project.name}</span>
+									</div>
+									<div className="w-16 text-right text-sm text-muted-foreground tabular-nums">
+										{stats ? formatNumber(stats.tableCount) : "-"}
+									</div>
+									<div className="w-16 text-right text-sm text-muted-foreground tabular-nums">
+										{stats ? formatNumber(stats.totalRows) : "-"}
+									</div>
+									<div className="w-16 text-right text-sm text-muted-foreground tabular-nums">
+										{stats ? formatNumber(stats.conversationCount) : "-"}
+									</div>
+									<div className="w-16 text-right text-sm text-muted-foreground tabular-nums">
+										{stats ? formatNumber(stats.savedQueryCount) : "-"}
+									</div>
+									<div className="w-24 text-right text-sm text-muted-foreground">
+										{new Date(project.updatedAt).toLocaleDateString()}
+									</div>
+									<div className="w-16 flex justify-end gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+										<Button
+											variant="ghost"
+											size="icon"
+											className="h-6 w-6"
+											onClick={(e) => handleEdit(e, project)}
+										>
+											<Pencil className="h-3 w-3" />
+										</Button>
+										<Button
+											variant="ghost"
+											size="icon"
+											className="h-6 w-6 text-destructive hover:text-destructive hover:bg-destructive/10"
+											onClick={(e) => handleDelete(e, project.id)}
+										>
+											<Trash2 className="h-3 w-3" />
+										</Button>
+									</div>
+								</div>
 							);
 						})}
 					</div>
@@ -319,51 +330,38 @@ export function HomePage() {
 			<SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
 
 			{/* Edit Project Dialog */}
-			<Dialog open={!!editingProject} onOpenChange={(open) => !open && setEditingProject(null)}>
+			<Dialog
+				open={!!editingProject}
+				onOpenChange={(open) => !open && setEditingProject(null)}
+			>
 				<DialogContent>
 					<DialogHeader>
-						<DialogTitle>Edit Project</DialogTitle>
+						<DialogTitle>Rename Project</DialogTitle>
 						<DialogDescription>
-							Update your project's name and description.
+							Enter a new name for your project.
 						</DialogDescription>
 					</DialogHeader>
-					<div className="space-y-4 py-4">
-						<div className="space-y-2">
-							<label className="text-sm font-medium">Project Name</label>
-							<Input
-								placeholder="My Analysis Project"
-								value={editForm.name}
-								onChange={(e) =>
-									setEditForm({ ...editForm, name: e.target.value })
+					<div className="py-4">
+						<Input
+							placeholder="Project name"
+							value={editName}
+							onChange={(e) => setEditName(e.target.value)}
+							onKeyDown={(e) => {
+								if (e.key === "Enter" && editName.trim()) {
+									handleUpdate();
 								}
-							/>
-						</div>
-						<div className="space-y-2">
-							<label className="text-sm font-medium">Description</label>
-							<Textarea
-								placeholder="What is this project about?"
-								value={editForm.description}
-								onChange={(e) =>
-									setEditForm({
-										...editForm,
-										description: e.target.value,
-									})
-								}
-							/>
-						</div>
+							}}
+						/>
 					</div>
 					<DialogFooter>
-						<Button
-							variant="outline"
-							onClick={() => setEditingProject(null)}
-						>
+						<Button variant="outline" onClick={() => setEditingProject(null)}>
 							Cancel
 						</Button>
 						<Button
 							onClick={handleUpdate}
-							disabled={!editForm.name.trim() || updateMutation.isPending}
+							disabled={!editName.trim() || updateMutation.isPending}
 						>
-							{updateMutation.isPending ? "Saving..." : "Save Changes"}
+							{updateMutation.isPending ? "Saving..." : "Save"}
 						</Button>
 					</DialogFooter>
 				</DialogContent>

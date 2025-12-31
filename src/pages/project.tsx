@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getCurrentWindow } from "@tauri-apps/api/window";
@@ -55,12 +55,46 @@ export function ProjectPage() {
 	const { activeTab, setActiveTab, sidebarOpen } = useAppStore();
 	const { setCurrentProject, selectedTable, selectTable } = useProjectStore();
 	const { mode } = useThemeStore();
-	const isDark = mode === "dark" || (mode === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+	const isDark =
+		mode === "dark" ||
+		(mode === "system" &&
+			window.matchMedia("(prefers-color-scheme: dark)").matches);
 	const [importDialogOpen, setImportDialogOpen] = useState(false);
 	const [vectorizeTable, setVectorizeTable] = useState<string | null>(null);
 	const [settingsOpen, setSettingsOpen] = useState(false);
 	const [renameDialogOpen, setRenameDialogOpen] = useState(false);
 	const [newName, setNewName] = useState("");
+	const [sidebarWidth, setSidebarWidth] = useState(256);
+	const isResizing = useRef(false);
+
+	const startResizing = useCallback((e: React.MouseEvent) => {
+		e.preventDefault();
+		isResizing.current = true;
+		document.body.style.cursor = "col-resize";
+		document.body.style.userSelect = "none";
+	}, []);
+
+	useEffect(() => {
+		const handleMouseMove = (e: MouseEvent) => {
+			if (!isResizing.current) return;
+			const newWidth = Math.min(Math.max(e.clientX, 180), 500);
+			setSidebarWidth(newWidth);
+		};
+
+		const handleMouseUp = () => {
+			isResizing.current = false;
+			document.body.style.cursor = "";
+			document.body.style.userSelect = "";
+		};
+
+		document.addEventListener("mousemove", handleMouseMove);
+		document.addEventListener("mouseup", handleMouseUp);
+
+		return () => {
+			document.removeEventListener("mousemove", handleMouseMove);
+			document.removeEventListener("mouseup", handleMouseUp);
+		};
+	}, []);
 
 	const handleDrag = async (e: React.MouseEvent) => {
 		const target = e.target as HTMLElement;
@@ -147,16 +181,16 @@ export function ProjectPage() {
 		>
 			{/* Header */}
 			<header
-				className="h-14 border-b flex items-center pl-24 pr-4 shrink-0"
+				className="h-14 border-b flex items-center pl-24 pr-4 shrink-0 relative"
 				onMouseDown={handleDrag}
 			>
 				<div className="flex items-center gap-2" onMouseDown={handleDrag}>
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
-							<button className="flex items-center gap-2 hover:bg-accent px-2 py-1.5 rounded-md transition-colors">
-								<Database className="h-4 w-4 text-muted-foreground" />
+							<button className="flex items-center gap-2 hover:bg-accent hover:text-accent-foreground px-2 py-1.5 rounded-md transition-colors group">
+								<Database className="h-4 w-4 text-muted-foreground group-hover:text-accent-foreground" />
 								<span className="font-semibold">{project.name}</span>
-								<ChevronDown className="h-4 w-4 text-muted-foreground" />
+								<ChevronDown className="h-4 w-4 text-muted-foreground group-hover:text-accent-foreground" />
 							</button>
 						</DropdownMenuTrigger>
 						<DropdownMenuContent align="start" className="w-56">
@@ -184,6 +218,7 @@ export function ProjectPage() {
 						</DropdownMenuContent>
 					</DropdownMenu>
 				</div>
+
 				<div className="flex-1 flex justify-center" onMouseDown={handleDrag}>
 					<TabsList className="h-9 bg-transparent">
 						<TabsTrigger value="browser" className="gap-2">
@@ -205,12 +240,19 @@ export function ProjectPage() {
 					</TabsList>
 				</div>
 				<div className="flex items-center gap-2" onMouseDown={handleDrag}>
+					<span className="text-[10px] font-mono text-muted-foreground/70">
+						v{__APP_VERSION__}
+					</span>
 					<Button
 						variant="ghost"
 						size="icon"
 						onClick={() => setSettingsOpen(true)}
 					>
-						{isDark ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+						{isDark ? (
+							<Moon className="h-5 w-5" />
+						) : (
+							<Sun className="h-5 w-5" />
+						)}
 					</Button>
 				</div>
 			</header>
@@ -219,52 +261,64 @@ export function ProjectPage() {
 			<div className="flex-1 flex overflow-hidden">
 				{/* Sidebar */}
 				{sidebarOpen && (
-					<aside className="w-64 border-r flex flex-col shrink-0">
-						<ScrollArea className="flex-1">
-							<div className="p-2">
-								{tablesLoading ? (
-									<div className="space-y-2">
-										{[1, 2, 3].map((i) => (
-											<div
-												key={i}
-												className="h-8 bg-muted rounded animate-pulse"
-											></div>
-										))}
-									</div>
-								) : tables.length === 0 ? (
-									<div className="py-4">
-										<DropZone projectId={id!} />
-									</div>
-								) : (
-									<div className="space-y-1">
-										{tables.map((table) => (
-											<div
-												key={table.name}
-												className={`w-full text-left px-3 py-2 rounded-md text-sm flex items-center gap-2 transition-colors cursor-pointer ${
-													selectedTable === table.name
-														? "bg-muted text-foreground"
-														: "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-												}`}
-												onClick={() => {
-													selectTable(table.name);
-													setActiveTab("browser");
-												}}
-											>
-												<Table className="h-4 w-4 shrink-0" />
-												<span className="truncate flex-1 min-w-0">{table.name}</span>
-												<span className="text-xs opacity-60 shrink-0">
-													{table.rowCount.toLocaleString()}
-												</span>
-											</div>
-										))}
-										<div className="pt-4">
+					<>
+						<aside
+							className="border-r flex flex-col shrink-0"
+							style={{ width: sidebarWidth }}
+						>
+							<ScrollArea className="flex-1">
+								<div className="p-2">
+									{tablesLoading ? (
+										<div className="space-y-2">
+											{[1, 2, 3].map((i) => (
+												<div
+													key={i}
+													className="h-8 bg-muted rounded animate-pulse"
+												></div>
+											))}
+										</div>
+									) : tables.length === 0 ? (
+										<div className="py-4">
 											<DropZone projectId={id!} />
 										</div>
-									</div>
-								)}
-							</div>
-						</ScrollArea>
-					</aside>
+									) : (
+										<div className="space-y-1">
+											{tables.map((table) => (
+												<div
+													key={table.name}
+													className={`w-full text-left px-3 py-2 rounded-md text-sm flex items-center gap-2 transition-colors cursor-pointer ${
+														selectedTable === table.name
+															? "bg-muted text-foreground"
+															: "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+													}`}
+													onClick={() => {
+														selectTable(table.name);
+														setActiveTab("browser");
+													}}
+												>
+													<Table className="h-4 w-4 shrink-0" />
+													<span className="truncate flex-1 min-w-0">
+														{table.name}
+													</span>
+													<span className="text-xs opacity-60 shrink-0">
+														{table.rowCount.toLocaleString()}
+													</span>
+												</div>
+											))}
+											<div className="pt-4">
+												<DropZone projectId={id!} />
+											</div>
+										</div>
+									)}
+								</div>
+							</ScrollArea>
+						</aside>
+						{/* Resize handle */}
+						<div
+							className="w-1 cursor-col-resize hover:bg-primary/50 active:bg-primary transition-colors shrink-0"
+							onMouseDown={startResizing}
+						/>
+					</>
 				)}
 
 				{/* Main area */}
@@ -274,7 +328,9 @@ export function ProjectPage() {
 							<TableViewer
 								projectId={id!}
 								tableName={selectedTable}
-								isVectorized={tables.find((t) => t.name === selectedTable)?.isVectorized}
+								isVectorized={
+									tables.find((t) => t.name === selectedTable)?.isVectorized
+								}
 								onVectorize={() => setVectorizeTable(selectedTable)}
 							/>
 						) : (

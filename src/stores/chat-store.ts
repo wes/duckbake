@@ -24,6 +24,7 @@ interface ChatState {
   appendToStreaming: (chunk: string) => void;
   finalizeStreaming: (messageId: string) => void;
   clearMessages: () => void;
+  resetForProject: () => void;
 }
 
 export const useChatStore = create<ChatState>((set, get) => ({
@@ -88,4 +89,13 @@ export const useChatStore = create<ChatState>((set, get) => ({
   },
 
   clearMessages: () => set({ messages: [], currentConversationId: null }),
+
+  resetForProject: () =>
+    set({
+      currentConversationId: null,
+      messages: [],
+      isStreaming: false,
+      streamingContent: "",
+      conversations: [],
+    }),
 }));

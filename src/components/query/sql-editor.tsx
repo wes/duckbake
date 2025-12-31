@@ -16,6 +16,7 @@ import {
   saveQuery,
   updateSavedQuery,
   deleteSavedQuery,
+  getProjectContext,
 } from "@/lib/tauri";
 import type { QueryResult, SavedQuery } from "@/types";
 
@@ -54,12 +55,60 @@ export function SqlEditor({ projectId }: SqlEditorProps) {
   const pendingSql = useAppStore((s) => s.pendingSql);
   const setPendingSql = useAppStore((s) => s.setPendingSql);
   const pendingExecuted = useRef(false);
+  const [sidebarWidth, setSidebarWidth] = useState(224);
+  const isResizing = useRef(false);
+
+  const startResizing = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    isResizing.current = true;
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+  }, []);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isResizing.current) return;
+      const newWidth = Math.min(Math.max(e.clientX - 256, 150), 400);
+      setSidebarWidth(newWidth);
+    };
+
+    const handleMouseUp = () => {
+      isResizing.current = false;
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, []);
 
   // Load saved queries
   const { data: savedQueries = [], refetch: refetchQueries } = useQuery({
     queryKey: ["saved-queries", projectId],
     queryFn: () => listSavedQueries(projectId),
   });
+
+  // Load project context for autocomplete
+  const { data: projectContext } = useQuery({
+    queryKey: ["project-context", projectId],
+    queryFn: () => getProjectContext(projectId),
+    staleTime: 30000,
+  });
+
+  // Build schema for CodeMirror SQL autocomplete
+  const sqlSchema = useMemo(() => {
+    if (!projectContext?.tables) return {};
+    const schema: Record<string, string[]> = {};
+    for (const table of projectContext.tables) {
+      schema[table.name] = table.columns.map((col) => col.name);
+    }
+    return schema;
+  }, [projectContext]);
 
   useEffect(() => {
     const observer = new MutationObserver(() => {
@@ -192,7 +241,10 @@ export function SqlEditor({ projectId }: SqlEditorProps) {
   return (
     <div className="h-full flex overflow-hidden">
       {/* Saved Queries Sidebar */}
-      <div className="w-56 border-r flex flex-col shrink-0">
+      <div
+        className="border-r flex flex-col shrink-0"
+        style={{ width: sidebarWidth }}
+      >
         <div className="p-3 border-b">
           <h3 className="font-medium text-sm">Saved Queries</h3>
         </div>
@@ -269,6 +321,11 @@ export function SqlEditor({ projectId }: SqlEditorProps) {
           </div>
         </ScrollArea>
       </div>
+      {/* Resize handle */}
+      <div
+        className="w-1 cursor-col-resize hover:bg-primary/50 active:bg-primary transition-colors shrink-0"
+        onMouseDown={startResizing}
+      />
 
       {/* Main Editor Area */}
       <div className="flex-1 flex flex-col bg-background overflow-hidden">
@@ -277,7 +334,7 @@ export function SqlEditor({ projectId }: SqlEditorProps) {
           <CodeMirror
             value={query}
             height="150px"
-            extensions={[sql(), isDark ? catppuccinMocha : catppuccinLatte, transparentTheme]}
+            extensions={[sql({ schema: sqlSchema }), isDark ? catppuccinMocha : catppuccinLatte, transparentTheme]}
             onChange={(value) => {
               setQuery(value);
             }}
@@ -364,7 +421,7 @@ export function SqlEditor({ projectId }: SqlEditorProps) {
               <span className="text-sm">
                 {executeMutation.error instanceof Error
                   ? executeMutation.error.message
-                  : "Query failed"}
+                  : String(executeMutation.error)}
               </span>
             </div>
           )}

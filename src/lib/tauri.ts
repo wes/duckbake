@@ -78,9 +78,11 @@ export async function queryTable(
   projectId: string,
   tableName: string,
   page: number,
-  pageSize: number
+  pageSize: number,
+  orderBy?: string,
+  orderDesc?: boolean
 ): Promise<QueryResult> {
-  return invoke("query_table", { projectId, tableName, page, pageSize });
+  return invoke("query_table", { projectId, tableName, page, pageSize, orderBy, orderDesc });
 }
 
 export async function getProjectContext(

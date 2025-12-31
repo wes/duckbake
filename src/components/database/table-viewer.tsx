@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   ChevronLeft,
@@ -20,7 +20,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { DataGrid } from "./data-grid";
+import { DataGrid, type SortState } from "./data-grid";
 import { queryTable } from "@/lib/tauri";
 
 interface TableViewerProps {
@@ -35,6 +35,17 @@ const PAGE_SIZES = [50, 100, 250, 500, 1000];
 export function TableViewer({ projectId, tableName, isVectorized, onVectorize }: TableViewerProps) {
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(100);
+  const [sort, setSort] = useState<SortState | null>(null);
+
+  // Reset state when table changes
+  const prevTableName = useRef(tableName);
+  useEffect(() => {
+    if (prevTableName.current !== tableName) {
+      setPage(0);
+      setSort(null);
+      prevTableName.current = tableName;
+    }
+  }, [tableName]);
 
   // Fetch table data
   const {
@@ -43,11 +54,24 @@ export function TableViewer({ projectId, tableName, isVectorized, onVectorize }:
     isFetching,
     refetch,
   } = useQuery({
-    queryKey: ["table-data", projectId, tableName, page, pageSize],
-    queryFn: () => queryTable(projectId, tableName, page, pageSize),
+    queryKey: ["table-data", projectId, tableName, page, pageSize, sort?.column, sort?.desc],
+    queryFn: () => queryTable(projectId, tableName, page, pageSize, sort?.column, sort?.desc),
     enabled: !!tableName,
-    placeholderData: (prev) => prev,
   });
+
+  const handleSort = (column: string) => {
+    setPage(0); // Reset to first page when sorting
+    setSort((prev) => {
+      if (prev?.column === column) {
+        // Toggle direction or clear
+        if (prev.desc) {
+          return null; // Clear sort
+        }
+        return { column, desc: true };
+      }
+      return { column, desc: false };
+    });
+  };
 
   const totalRows = result?.rowCount || 0;
   const hasMore = totalRows === pageSize;
@@ -111,7 +135,13 @@ export function TableViewer({ projectId, tableName, isVectorized, onVectorize }:
 
       {/* Data Grid */}
       <div className="flex-1 overflow-hidden p-3">
-        <DataGrid columns={columns} rows={rows} isLoading={isLoading} />
+        <DataGrid
+          columns={columns}
+          rows={rows}
+          isLoading={isLoading}
+          sort={sort}
+          onSort={handleSort}
+        />
       </div>
 
       {/* Pagination */}

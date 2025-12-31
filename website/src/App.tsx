@@ -1,3 +1,5 @@
+import { useEffect, useRef } from "react";
+import { animate, stagger } from "animejs";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -26,10 +28,11 @@ import {
 } from "lucide-react";
 import "./index.css";
 import duckbakeLogo from "./duckbake.png";
-import screenshotHome from "./screenshots/home.png";
-import screenshotBrowser from "./screenshots/project-browser.png";
-import screenshotChat from "./screenshots/project-chat.png";
-import screenshotQuery from "./screenshots/project-query.png";
+import { ScreenshotCarousel } from "@/components/screenshot-carousel";
+import { getScreenshots } from "@/lib/screenshots";
+
+// Dynamically load all screenshots from src/screenshots/
+const screenshots = getScreenshots();
 
 function DuckLogo({ className }: { className?: string }) {
 	return <img src={duckbakeLogo} alt="DuckBake Logo" className={className} />;
@@ -49,12 +52,6 @@ function NavBar() {
 						className="text-muted-foreground hover:text-foreground transition-colors"
 					>
 						Features
-					</a>
-					<a
-						href="#screenshots"
-						className="text-muted-foreground hover:text-foreground transition-colors"
-					>
-						Screenshots
 					</a>
 					<a
 						href="#how-it-works"
@@ -89,15 +86,39 @@ function NavBar() {
 }
 
 function Hero() {
+	const heroRef = useRef<HTMLDivElement>(null);
+
+	useEffect(() => {
+		if (!heroRef.current) return;
+
+		// Animate hero content on load
+		animate(heroRef.current.querySelectorAll(".hero-animate"), {
+			translateY: [30, 0],
+			opacity: [0, 1],
+			duration: 800,
+			delay: stagger(100, { start: 200 }),
+			ease: "outCubic",
+		});
+
+		// Animate the screenshot
+		animate(heroRef.current.querySelector(".hero-screenshot"), {
+			translateY: [60, 0],
+			opacity: [0, 1],
+			duration: 1000,
+			delay: 600,
+			ease: "outCubic",
+		});
+	}, []);
+
 	return (
-		<section className="relative pt-32 pb-20 overflow-hidden">
+		<section ref={heroRef} className="relative pt-32 pb-20 overflow-hidden">
 			<div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/10 -z-10" />
 			<div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl -z-10 animate-pulse" />
 			<div className="absolute bottom-10 right-10 w-96 h-96 bg-accent/20 rounded-full blur-3xl -z-10 animate-pulse" />
 
 			<div className="max-w-6xl mx-auto px-6">
 				<div className="text-center max-w-4xl mx-auto">
-					<div className="flex flex-wrap items-center justify-center gap-3 mb-8">
+					<div className="hero-animate opacity-0 flex flex-wrap items-center justify-center gap-3 mb-8">
 						<a
 							href="https://github.com/wes/duckbake"
 							target="_blank"
@@ -122,17 +143,17 @@ function Hero() {
 						</a>
 					</div>
 
-					<h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6 bg-gradient-to-r from-foreground via-foreground to-primary bg-clip-text">
+					<h1 className="hero-animate opacity-0 text-5xl md:text-7xl font-bold tracking-tight mb-6 bg-gradient-to-r from-foreground via-foreground to-primary bg-clip-text">
 						Your Data, Your Mac,
 						<span className="text-primary"> Quack!</span>
 					</h1>
 
-					<p className="text-xl md:text-2xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed">
+					<p className="hero-animate opacity-0 text-xl md:text-2xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed">
 						Store, query, and analyze your data locally with DuckDB and AI
 						conversation. No cloud required. Your data never leaves your device.
 					</p>
 
-					<div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
+					<div className="hero-animate opacity-0 flex flex-col sm:flex-row gap-4 justify-center mb-16">
 						<Button size="lg" asChild>
 							<a href="https://github.com/wes/duckbake/releases/latest/download/DuckBake-macOS.dmg">
 								<Apple className="w-4 h-4" />
@@ -147,13 +168,10 @@ function Hero() {
 						</Button>
 					</div>
 
-					<div className="relative rounded-2xl border border-border/50 shadow-2xl shadow-primary/10 overflow-hidden bg-card">
-						<img
-							src={screenshotChat}
-							alt="DuckBake Chat Interface"
-							className="w-full h-auto"
-						/>
-					</div>
+					<ScreenshotCarousel
+						className="hero-screenshot opacity-0"
+						screenshots={screenshots}
+					/>
 				</div>
 			</div>
 		</section>
@@ -161,6 +179,45 @@ function Hero() {
 }
 
 function Features() {
+	const featuresRef = useRef<HTMLDivElement>(null);
+	const hasAnimated = useRef(false);
+
+	useEffect(() => {
+		if (!featuresRef.current) return;
+
+		const observer = new IntersectionObserver(
+			(entries) => {
+				entries.forEach((entry) => {
+					if (entry.isIntersecting && !hasAnimated.current) {
+						hasAnimated.current = true;
+
+						// Animate section header
+						animate(featuresRef.current?.querySelectorAll(".features-header"), {
+							translateY: [40, 0],
+							opacity: [0, 1],
+							duration: 800,
+							ease: "outCubic",
+						});
+
+						// Animate cards with stagger
+						animate(featuresRef.current?.querySelectorAll(".feature-card"), {
+							translateY: [60, 0],
+							opacity: [0, 1],
+							scale: [0.9, 1],
+							duration: 700,
+							delay: stagger(100, { start: 300 }),
+							ease: "outCubic",
+						});
+					}
+				});
+			},
+			{ threshold: 0.1 },
+		);
+
+		observer.observe(featuresRef.current);
+		return () => observer.disconnect();
+	}, []);
+
 	const features = [
 		{
 			icon: Database,
@@ -207,9 +264,13 @@ function Features() {
 	];
 
 	return (
-		<section id="features" className="py-24 bg-muted/30">
+		<section
+			ref={featuresRef}
+			id="features"
+			className="py-24 bg-muted/30 relative overflow-hidden"
+		>
 			<div className="max-w-6xl mx-auto px-6">
-				<div className="text-center mb-16">
+				<div className="features-header opacity-0 text-center mb-16">
 					<h2 className="text-4xl md:text-5xl font-bold mb-4">
 						Everything you need for local data analysis
 					</h2>
@@ -223,10 +284,10 @@ function Features() {
 					{features.map((feature, index) => (
 						<Card
 							key={index}
-							className="border-border/50 bg-card/50 backdrop-blur hover:shadow-lg transition-shadow"
+							className="feature-card opacity-0 border-border/50 bg-card/80 backdrop-blur hover:shadow-lg hover:scale-[1.02] transition-all duration-300"
 						>
 							<CardHeader>
-								<div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+								<div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
 									<feature.icon className="w-6 h-6 text-primary" />
 								</div>
 								<CardTitle className="text-xl">{feature.title}</CardTitle>
@@ -244,68 +305,63 @@ function Features() {
 	);
 }
 
-function Screenshots() {
-	const screenshots = [
-		{
-			src: screenshotHome,
-			title: "Project Dashboard",
-			description: "Manage all your data projects in one place",
-		},
-		{
-			src: screenshotBrowser,
-			title: "Data Browser",
-			description: "Explore and filter your data with an intuitive interface",
-		},
-		{
-			src: screenshotQuery,
-			title: "SQL Editor",
-			description: "Write and execute powerful SQL queries with syntax highlighting",
-		},
-		{
-			src: screenshotChat,
-			title: "AI Chat",
-			description: "Ask questions in plain English and get instant SQL queries",
-		},
-	];
-
-	return (
-		<section id="screenshots" className="py-24">
-			<div className="max-w-6xl mx-auto px-6">
-				<div className="text-center mb-16">
-					<h2 className="text-4xl md:text-5xl font-bold mb-4">
-						See it in action
-					</h2>
-					<p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-						A beautiful, intuitive interface designed for productivity
-					</p>
-				</div>
-
-				<div className="grid md:grid-cols-2 gap-8">
-					{screenshots.map((screenshot, index) => (
-						<div
-							key={index}
-							className="group relative rounded-2xl border border-border/50 shadow-lg overflow-hidden bg-card hover:shadow-xl hover:border-primary/30 transition-all duration-300"
-						>
-							<img
-								src={screenshot.src}
-								alt={screenshot.title}
-								className="w-full h-auto"
-							/>
-							<div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end">
-								<div className="p-6 text-white">
-									<h3 className="text-xl font-bold mb-1">{screenshot.title}</h3>
-									<p className="text-white/80">{screenshot.description}</p>
-								</div>
-							</div>
-						</div>
-					))}
-				</div>
-			</div>
-		</section>
-	);
-}
 
 function HowItWorks() {
+	const sectionRef = useRef<HTMLDivElement>(null);
+	const hasAnimated = useRef(false);
+
+	useEffect(() => {
+		if (!sectionRef.current) return;
+
+		const observer = new IntersectionObserver(
+			(entries) => {
+				entries.forEach((entry) => {
+					if (entry.isIntersecting && !hasAnimated.current) {
+						hasAnimated.current = true;
+
+						// Animate header
+						animate(sectionRef.current?.querySelectorAll(".hiw-header"), {
+							translateY: [30, 0],
+							opacity: [0, 1],
+							duration: 700,
+							ease: "outCubic",
+						});
+
+						// Animate steps sequentially with number pop
+						animate(sectionRef.current?.querySelectorAll(".step-number"), {
+							scale: [0, 1.2, 1],
+							opacity: [0, 1],
+							duration: 600,
+							delay: stagger(200, { start: 400 }),
+							ease: "outBack",
+						});
+
+						animate(sectionRef.current?.querySelectorAll(".step-content"), {
+							translateX: [30, 0],
+							opacity: [0, 1],
+							duration: 600,
+							delay: stagger(200, { start: 500 }),
+							ease: "outCubic",
+						});
+
+						// Animate connector lines
+						animate(sectionRef.current?.querySelectorAll(".step-connector"), {
+							scaleX: [0, 1],
+							opacity: [0, 1],
+							duration: 400,
+							delay: stagger(200, { start: 800 }),
+							ease: "outCubic",
+						});
+					}
+				});
+			},
+			{ threshold: 0.2 },
+		);
+
+		observer.observe(sectionRef.current);
+		return () => observer.disconnect();
+	}, []);
+
 	const steps = [
 		{
 			number: "01",
@@ -328,9 +384,9 @@ function HowItWorks() {
 	];
 
 	return (
-		<section id="how-it-works" className="py-24">
+		<section ref={sectionRef} id="how-it-works" className="py-24">
 			<div className="max-w-6xl mx-auto px-6">
-				<div className="text-center mb-16">
+				<div className="hiw-header opacity-0 text-center mb-16">
 					<h2 className="text-4xl md:text-5xl font-bold mb-4">
 						Simple as 1, 2, 3
 					</h2>
@@ -342,17 +398,17 @@ function HowItWorks() {
 				<div className="grid md:grid-cols-3 gap-8">
 					{steps.map((step, index) => (
 						<div key={index} className="relative">
-							<div className="text-8xl font-bold text-primary/10 absolute -top-4 -left-2">
+							<div className="step-number opacity-0 text-8xl font-bold text-primary/10 absolute -top-4 -left-2">
 								{step.number}
 							</div>
-							<div className="relative pt-12">
+							<div className="step-content opacity-0 relative pt-12">
 								<h3 className="text-2xl font-bold mb-3">{step.title}</h3>
 								<p className="text-muted-foreground text-lg">
 									{step.description}
 								</p>
 							</div>
 							{index < steps.length - 1 && (
-								<div className="hidden md:block absolute top-1/2 -right-4 w-8 h-0.5 bg-border" />
+								<div className="step-connector opacity-0 hidden md:block absolute top-1/2 -right-4 w-8 h-0.5 bg-border origin-left" />
 							)}
 						</div>
 					))}
@@ -390,7 +446,8 @@ function Contribute() {
 		{
 			icon: GitPullRequest,
 			title: "Submit a PR",
-			description: "Found a bug? Have an improvement? We'd love your contributions.",
+			description:
+				"Found a bug? Have an improvement? We'd love your contributions.",
 		},
 		{
 			icon: MessageSquare,
@@ -400,12 +457,16 @@ function Contribute() {
 		{
 			icon: Users,
 			title: "Spread the Word",
-			description: "Star the repo, share with friends, help grow the community.",
+			description:
+				"Star the repo, share with friends, help grow the community.",
 		},
 	];
 
 	return (
-		<section id="contribute" className="py-24 bg-gradient-to-br from-green-500/5 via-transparent to-primary/5">
+		<section
+			id="contribute"
+			className="py-24 bg-gradient-to-br from-green-500/5 via-transparent to-primary/5"
+		>
 			<div className="max-w-6xl mx-auto px-6">
 				<div className="text-center mb-16">
 					<div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-500/10 text-green-600 dark:text-green-400 text-sm font-medium mb-6">
@@ -416,7 +477,9 @@ function Contribute() {
 						Help us make DuckBake amazing
 					</h2>
 					<p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-						DuckBake is fully open source and built by the community. Whether you're a developer, designer, or just have great ideas — we'd love your help.
+						DuckBake is fully open source and built by the community. Whether
+						you're a developer, designer, or just have great ideas — we'd love
+						your help.
 					</p>
 				</div>
 
@@ -460,26 +523,98 @@ function Contribute() {
 }
 
 function Download() {
+	const sectionRef = useRef<HTMLDivElement>(null);
+	const duckRef = useRef<HTMLImageElement>(null);
+	const hasAnimated = useRef(false);
+
+	useEffect(() => {
+		if (!sectionRef.current) return;
+
+		const observer = new IntersectionObserver(
+			(entries) => {
+				entries.forEach((entry) => {
+					if (entry.isIntersecting && !hasAnimated.current) {
+						hasAnimated.current = true;
+
+						// Duck bounce and wobble
+						animate(duckRef.current, {
+							translateY: [-50, 0],
+							rotate: ["-15deg", "10deg", "-5deg", "0deg"],
+							scale: [0.5, 1.1, 1],
+							opacity: [0, 1],
+							duration: 1000,
+							ease: "outElastic(1, 0.5)",
+						});
+
+						// Start continuous wobble after initial animation
+						setTimeout(() => {
+							animate(duckRef.current, {
+								rotate: ["-2deg", "2deg"],
+								translateY: [-3, 3],
+								duration: 2000,
+								alternate: true,
+								loop: true,
+								ease: "inOutSine",
+							});
+						}, 1000);
+
+						// Content fade in
+						animate(sectionRef.current?.querySelectorAll(".download-content"), {
+							translateY: [30, 0],
+							opacity: [0, 1],
+							duration: 700,
+							delay: stagger(100, { start: 400 }),
+							ease: "outCubic",
+						});
+
+						// Buttons with bounce
+						animate(sectionRef.current?.querySelectorAll(".download-btn"), {
+							scale: [0.8, 1.05, 1],
+							opacity: [0, 1],
+							duration: 600,
+							delay: stagger(100, { start: 700 }),
+							ease: "outBack",
+						});
+					}
+				});
+			},
+			{ threshold: 0.2 },
+		);
+
+		observer.observe(sectionRef.current);
+		return () => observer.disconnect();
+	}, []);
+
 	return (
-		<section id="download" className="py-24">
+		<section ref={sectionRef} id="download" className="py-24">
 			<div className="max-w-4xl mx-auto px-6 text-center">
-				<DuckLogo className="w-24 mx-auto" />
-				<h2 className="text-4xl md:text-5xl font-bold mb-4">
+				<img
+					ref={duckRef}
+					src={duckbakeLogo}
+					alt="DuckBake Logo"
+					className="w-24 mx-auto mb-6 opacity-0"
+				/>
+				<h2 className="download-content opacity-0 text-4xl md:text-5xl font-bold mb-4">
 					Ready to analyze your data?
 				</h2>
-				<p className="text-xl text-muted-foreground mb-10 max-w-2xl mx-auto">
+				<p className="download-content opacity-0 text-xl text-muted-foreground mb-10 max-w-2xl mx-auto">
 					Download DuckBake for free and harness the power of DuckDB with an AI
 					assistant. No account required. Fully open source.
 				</p>
 
 				<div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-					<Button size="lg" asChild>
+					<Button size="lg" asChild className="download-btn opacity-0">
 						<a href="https://github.com/wes/duckbake/releases/latest/download/DuckBake-macOS.dmg">
 							<Apple className="w-4 h-4 mr-2" />
 							Download for macOS
 						</a>
 					</Button>
-					<Button size="lg" variant="outline" asChild>
+					<Button
+						size="lg"
+						variant="outline"
+						asChild
+						className="download-btn opacity-0"
+					>
 						<a
 							href="https://github.com/wes/duckbake"
 							target="_blank"
@@ -491,7 +626,7 @@ function Download() {
 					</Button>
 				</div>
 
-				<p className="text-sm text-muted-foreground">
+				<p className="download-content opacity-0 text-sm text-muted-foreground">
 					Requires macOS 13.0 or later. Universal binary for Intel and Apple
 					Silicon.
 				</p>
@@ -510,10 +645,16 @@ function Footer() {
 						<span className="font-bold text-lg">DuckBake</span>
 					</div>
 					<div className="flex items-center gap-8 text-sm text-muted-foreground">
-						<a href="/privacy" className="hover:text-foreground transition-colors">
+						<a
+							href="/privacy"
+							className="hover:text-foreground transition-colors"
+						>
 							Privacy Policy
 						</a>
-						<a href="/terms" className="hover:text-foreground transition-colors">
+						<a
+							href="/terms"
+							className="hover:text-foreground transition-colors"
+						>
 							Terms of Service
 						</a>
 						<a
@@ -547,7 +688,6 @@ export function App() {
 			<main>
 				<Hero />
 				<Features />
-				<Screenshots />
 				<HowItWorks />
 				<Contribute />
 				<Testimonial />
