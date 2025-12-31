@@ -107,9 +107,11 @@ const formatFileSize = (bytes: number): string => {
 
 console.log("\n🚀 Starting build process...\n");
 
-// Generate OG image
+// Generate OG image and favicons
 console.log("🖼️  Generating OG image...");
 await import("./scripts/generate-og-image.ts");
+console.log("🔷 Generating favicons...");
+await import("./scripts/generate-favicons.ts");
 
 const cliConfig = parseArgs();
 const outdir = cliConfig.outdir || path.join(process.cwd(), "dist");
@@ -154,9 +156,9 @@ const outputTable = result.outputs.map(output => ({
 
 console.table(outputTable);
 
-// Copy SEO files to output
-console.log("\n📋 Copying SEO files...");
-const seoFiles = ["robots.txt", "sitemap.xml", "og-image.png"];
+// Copy SEO and static files to output
+console.log("\n📋 Copying SEO and static files...");
+const seoFiles = ["robots.txt", "sitemap.xml", "og-image.png", "favicon.ico", "site.webmanifest", "favicon-192x192.png", "favicon-512x512.png"];
 for (const file of seoFiles) {
   const src = path.join("src", file);
   const dest = path.join(outdir, file);
