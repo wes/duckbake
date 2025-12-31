@@ -107,13 +107,18 @@ jobs:
 
       - name: Prepare release files
         run: |
+          # Debug: show artifact structure
+          find artifacts -type f
+
           # Find and copy files to root for easier upload
           DMG_FILE=$(find artifacts -name "*.dmg" | head -1)
           cp "$DMG_FILE" artifacts/DuckBake-macOS.dmg
 
-          # Copy update artifacts
-          cp artifacts/DuckBake-macOS/DuckBake.app.tar.gz artifacts/
-          cp artifacts/DuckBake-macOS/latest.json artifacts/
+          # Copy update artifacts (they're nested in the full path)
+          TAR_FILE=$(find artifacts -name "DuckBake.app.tar.gz" | head -1)
+          JSON_FILE=$(find artifacts -name "latest.json" | head -1)
+          cp "$TAR_FILE" artifacts/
+          cp "$JSON_FILE" artifacts/
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
