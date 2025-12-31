@@ -19,6 +19,10 @@ import {
 	Lock,
 	Apple,
 	Github,
+	Heart,
+	Code,
+	Users,
+	GitPullRequest,
 } from "lucide-react";
 import "./index.css";
 import duckbakeLogo from "./duckbake.png";
@@ -47,6 +51,12 @@ function NavBar() {
 						className="text-muted-foreground hover:text-foreground transition-colors"
 					>
 						How it Works
+					</a>
+					<a
+						href="#contribute"
+						className="text-muted-foreground hover:text-foreground transition-colors"
+					>
+						Contribute
 					</a>
 					<a
 						href="https://github.com/wes/duckbake"
@@ -78,14 +88,28 @@ function Hero() {
 			<div className="max-w-6xl mx-auto px-6">
 				<div className="text-center max-w-4xl mx-auto">
 					<div className="flex flex-wrap items-center justify-center gap-3 mb-8">
-						<div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium">
-							<Sparkles className="w-4 h-4" />
-							100% Free & Open Source
-						</div>
+						<a
+							href="https://github.com/wes/duckbake"
+							target="_blank"
+							rel="noopener noreferrer"
+							className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-colors"
+						>
+							<Github className="w-4 h-4" />
+							Fully Open Source
+						</a>
 						<div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-sm font-medium">
 							<Database className="w-4 h-4" />
 							Powered by DuckDB
 						</div>
+						<a
+							href="https://github.com/wes/duckbake/blob/master/CONTRIBUTING.md"
+							target="_blank"
+							rel="noopener noreferrer"
+							className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-500/10 text-green-600 dark:text-green-400 text-sm font-medium hover:bg-green-500/20 transition-colors"
+						>
+							<Heart className="w-4 h-4" />
+							Contributions Welcome
+						</a>
 					</div>
 
 					<h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6 bg-gradient-to-r from-foreground via-foreground to-primary bg-clip-text">
@@ -233,6 +257,12 @@ function Features() {
 			description:
 				"Sandboxed application with no network access to your data. Your files are encrypted at rest using macOS security.",
 		},
+		{
+			icon: Code,
+			title: "Fully Open Source",
+			description:
+				"Built in the open on GitHub. Read the code, suggest features, report bugs, or contribute improvements. Let's make this amazing together.",
+		},
 	];
 
 	return (
@@ -353,6 +383,80 @@ function Testimonial() {
 	);
 }
 
+function Contribute() {
+	const ways = [
+		{
+			icon: GitPullRequest,
+			title: "Submit a PR",
+			description: "Found a bug? Have an improvement? We'd love your contributions.",
+		},
+		{
+			icon: MessageSquare,
+			title: "Share Ideas",
+			description: "Open an issue to suggest features or discuss improvements.",
+		},
+		{
+			icon: Users,
+			title: "Spread the Word",
+			description: "Star the repo, share with friends, help grow the community.",
+		},
+	];
+
+	return (
+		<section id="contribute" className="py-24 bg-gradient-to-br from-green-500/5 via-transparent to-primary/5">
+			<div className="max-w-6xl mx-auto px-6">
+				<div className="text-center mb-16">
+					<div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-500/10 text-green-600 dark:text-green-400 text-sm font-medium mb-6">
+						<Heart className="w-4 h-4" />
+						Open Source
+					</div>
+					<h2 className="text-4xl md:text-5xl font-bold mb-4">
+						Help us make DuckBake amazing
+					</h2>
+					<p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+						DuckBake is fully open source and built by the community. Whether you're a developer, designer, or just have great ideas — we'd love your help.
+					</p>
+				</div>
+
+				<div className="grid md:grid-cols-3 gap-8 mb-12">
+					{ways.map((way, index) => (
+						<div key={index} className="text-center">
+							<div className="w-16 h-16 rounded-2xl bg-green-500/10 flex items-center justify-center mx-auto mb-4">
+								<way.icon className="w-8 h-8 text-green-600 dark:text-green-400" />
+							</div>
+							<h3 className="text-xl font-bold mb-2">{way.title}</h3>
+							<p className="text-muted-foreground">{way.description}</p>
+						</div>
+					))}
+				</div>
+
+				<div className="flex flex-col sm:flex-row gap-4 justify-center">
+					<Button size="lg" variant="outline" asChild>
+						<a
+							href="https://github.com/wes/duckbake"
+							target="_blank"
+							rel="noopener noreferrer"
+						>
+							<Github className="w-4 h-4 mr-2" />
+							View on GitHub
+						</a>
+					</Button>
+					<Button size="lg" asChild className="bg-green-600 hover:bg-green-700">
+						<a
+							href="https://github.com/wes/duckbake/blob/master/CONTRIBUTING.md"
+							target="_blank"
+							rel="noopener noreferrer"
+						>
+							<Heart className="w-4 h-4 mr-2" />
+							Start Contributing
+						</a>
+					</Button>
+				</div>
+			</div>
+		</section>
+	);
+}
+
 function Download() {
 	return (
 		<section id="download" className="py-24">
@@ -363,14 +467,24 @@ function Download() {
 				</h2>
 				<p className="text-xl text-muted-foreground mb-10 max-w-2xl mx-auto">
 					Download DuckBake for free and harness the power of DuckDB with an AI
-					assistant. No account required.
+					assistant. No account required. Fully open source.
 				</p>
 
-				<div className="flex justify-center mb-8">
+				<div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
 					<Button size="lg" asChild>
 						<a href="https://github.com/wes/duckbake/releases/latest/download/DuckBake-macOS.dmg">
 							<Apple className="w-4 h-4 mr-2" />
 							Download for macOS
+						</a>
+					</Button>
+					<Button size="lg" variant="outline" asChild>
+						<a
+							href="https://github.com/wes/duckbake"
+							target="_blank"
+							rel="noopener noreferrer"
+						>
+							<Github className="w-4 h-4 mr-2" />
+							View Source
 						</a>
 					</Button>
 				</div>
@@ -403,11 +517,18 @@ function Footer() {
 						<a
 							href="https://github.com/wes/duckbake"
 							className="hover:text-foreground transition-colors"
+							target="_blank"
+							rel="noopener noreferrer"
 						>
 							GitHub
 						</a>
-						<a href="#" className="hover:text-foreground transition-colors">
-							Contact
+						<a
+							href="https://github.com/wes/duckbake/blob/master/CONTRIBUTING.md"
+							className="hover:text-foreground transition-colors"
+							target="_blank"
+							rel="noopener noreferrer"
+						>
+							Contribute
 						</a>
 					</div>
 					<div className="text-sm text-muted-foreground">Built with DuckDB</div>
@@ -425,6 +546,7 @@ export function App() {
 				<Hero />
 				<Features />
 				<HowItWorks />
+				<Contribute />
 				<Testimonial />
 				<Download />
 			</main>
