@@ -2,6 +2,11 @@
 
 All notable changes to DuckBake will be documented in this file.
 
+## [0.0.13] - 2025-12-31
+
+### Changes
+
+- Sorting columns in browser, better errors when sql query fails, improvments on website, better folder browser, and native menu elements for check updates and more polishing overall
 ## [0.0.12] - 2025-12-31
 
 ### Changes
