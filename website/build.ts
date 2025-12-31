@@ -107,6 +107,10 @@ const formatFileSize = (bytes: number): string => {
 
 console.log("\n🚀 Starting build process...\n");
 
+// Generate OG image
+console.log("🖼️  Generating OG image...");
+await import("./scripts/generate-og-image.ts");
+
 const cliConfig = parseArgs();
 const outdir = cliConfig.outdir || path.join(process.cwd(), "dist");
 
@@ -149,6 +153,19 @@ const outputTable = result.outputs.map(output => ({
 }));
 
 console.table(outputTable);
+
+// Copy SEO files to output
+console.log("\n📋 Copying SEO files...");
+const seoFiles = ["robots.txt", "sitemap.xml", "og-image.png"];
+for (const file of seoFiles) {
+  const src = path.join("src", file);
+  const dest = path.join(outdir, file);
+  if (existsSync(src)) {
+    await Bun.write(dest, Bun.file(src));
+    console.log(`   ✓ ${file}`);
+  }
+}
+
 const buildTime = (end - start).toFixed(2);
 
 console.log(`\n✅ Build completed in ${buildTime}ms\n`);

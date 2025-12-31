@@ -7,6 +7,27 @@ const server = serve({
   routes: {
     "/terms": terms,
     "/privacy": privacy,
+
+    // SEO files
+    "/robots.txt": async () => {
+      const file = Bun.file(import.meta.dir + "/robots.txt");
+      return new Response(file, {
+        headers: { "Content-Type": "text/plain" },
+      });
+    },
+    "/sitemap.xml": async () => {
+      const file = Bun.file(import.meta.dir + "/sitemap.xml");
+      return new Response(file, {
+        headers: { "Content-Type": "application/xml" },
+      });
+    },
+    "/og-image.png": async () => {
+      const file = Bun.file(import.meta.dir + "/og-image.png");
+      return new Response(file, {
+        headers: { "Content-Type": "image/png" },
+      });
+    },
+
     // Serve index.html for all unmatched routes.
     "/*": index,
 

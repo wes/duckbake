@@ -1,0 +1,6 @@
+# robots.txt for DuckBake
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://duckbake.com/sitemap.xml
