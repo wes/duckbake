@@ -47,16 +47,19 @@ jobs:
           cd src-tauri/target/universal-apple-darwin/release/bundle/macos
           tar -czf DuckBake.app.tar.gz DuckBake.app
 
-          # Sign the update artifact
-          echo "${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}" > /tmp/private.key
-          bunx @tauri-apps/cli signer sign \
-            -k /tmp/private.key \
-            -p "${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}" \
-            DuckBake.app.tar.gz
-          rm /tmp/private.key
-
-          # Read the signature
-          SIGNATURE=$(cat DuckBake.app.tar.gz.sig)
+          # Sign the update artifact (only if key is set)
+          if [ -n "${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}" ]; then
+            echo "${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}" > /tmp/private.key
+            bunx @tauri-apps/cli signer sign \
+              -k /tmp/private.key \
+              -p "${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}" \
+              DuckBake.app.tar.gz
+            rm /tmp/private.key
+            SIGNATURE=$(cat DuckBake.app.tar.gz.sig)
+          else
+            echo "Warning: TAURI_SIGNING_PRIVATE_KEY not set, skipping signing"
+            SIGNATURE=""
+          fi
 
           # Create latest.json for the updater
           cat > latest.json << EOF
