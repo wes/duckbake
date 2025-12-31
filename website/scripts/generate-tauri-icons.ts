@@ -65,6 +65,7 @@ async function generateTauriIcons() {
 
     const outputPath = path.join(TAURI_ICONS_DIR, filename);
     await sharp(SOURCE_ICON)
+      .ensureAlpha()
       .resize(size, size, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } })
       .png()
       .toFile(outputPath);
@@ -76,6 +77,7 @@ async function generateTauriIcons() {
   for (const logo of WINDOWS_LOGOS) {
     const outputPath = path.join(TAURI_ICONS_DIR, `${logo.name}.png`);
     await sharp(SOURCE_ICON)
+      .ensureAlpha()
       .resize(logo.size, logo.size, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } })
       .png()
       .toFile(outputPath);
@@ -91,6 +93,7 @@ async function generateTauriIcons() {
     }
     const outputPath = path.join(folderPath, "ic_launcher.png");
     await sharp(SOURCE_ICON)
+      .ensureAlpha()
       .resize(android.size, android.size, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } })
       .png()
       .toFile(outputPath);
@@ -98,6 +101,7 @@ async function generateTauriIcons() {
     // Also generate round icon
     const roundOutputPath = path.join(folderPath, "ic_launcher_round.png");
     await sharp(SOURCE_ICON)
+      .ensureAlpha()
       .resize(android.size, android.size, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } })
       .png()
       .toFile(roundOutputPath);
@@ -105,6 +109,7 @@ async function generateTauriIcons() {
     // Generate foreground icon (same as regular for now)
     const foregroundPath = path.join(folderPath, "ic_launcher_foreground.png");
     await sharp(SOURCE_ICON)
+      .ensureAlpha()
       .resize(android.size, android.size, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } })
       .png()
       .toFile(foregroundPath);
@@ -118,6 +123,7 @@ async function generateTauriIcons() {
   const icoBuffers = await Promise.all(
     icoSizes.map(size =>
       sharp(SOURCE_ICON)
+        .ensureAlpha()
         .resize(size, size, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } })
         .png()
         .toBuffer()
@@ -207,6 +213,7 @@ async function createIcnsFile(sourcePath: string): Promise<Buffer> {
 
   for (const icns of icnsTypes) {
     const pngBuffer = await sharp(sourcePath)
+      .ensureAlpha()
       .resize(icns.size, icns.size, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } })
       .png()
       .toBuffer();
