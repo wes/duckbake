@@ -77,13 +77,19 @@ export function VectorizationDialog({
     };
   }, [open, projectId, tableName, queryClient]);
 
+  const [mutationError, setMutationError] = useState<string | null>(null);
+
   const vectorizeMutation = useMutation({
     mutationFn: () => vectorizeTable(projectId, tableName, selectedColumns),
     onSuccess: () => {
+      setMutationError(null);
       queryClient.invalidateQueries({
         queryKey: ["vectorization-status", projectId, tableName],
       });
       queryClient.invalidateQueries({ queryKey: ["tables", projectId] });
+    },
+    onError: (error: Error) => {
+      setMutationError(error.message);
     },
   });
 
@@ -113,6 +119,7 @@ export function VectorizationDialog({
   const handleClose = () => {
     if (!isProcessing) {
       setProgress(null);
+      setMutationError(null);
       onOpenChange(false);
     }
   };
@@ -155,7 +162,7 @@ export function VectorizationDialog({
                     No text columns found in this table.
                   </div>
                 ) : (
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     <p className="text-sm font-medium">
                       Select columns to vectorize:
                     </p>
@@ -175,6 +182,9 @@ export function VectorizationDialog({
                         </label>
                       ))}
                     </div>
+                    <p className="text-xs text-muted-foreground">
+                      Requires the <code className="bg-muted px-1 py-0.5 rounded">nomic-embed-text</code> Ollama model
+                    </p>
                   </div>
                 )}
               </>
@@ -204,8 +214,15 @@ export function VectorizationDialog({
               </div>
             )}
 
-            {progress?.status === "error" && (
-              <div className="text-sm text-destructive">{progress.error}</div>
+            {(progress?.status === "error" || mutationError) && (
+              <div className="text-sm text-destructive space-y-1">
+                <p>{progress?.error || mutationError}</p>
+                {(progress?.error || mutationError)?.includes("nomic-embed-text") && (
+                  <p className="text-xs text-muted-foreground">
+                    Run: <code className="bg-muted px-1 py-0.5 rounded">ollama pull nomic-embed-text</code>
+                  </p>
+                )}
+              </div>
             )}
           </div>
         )}

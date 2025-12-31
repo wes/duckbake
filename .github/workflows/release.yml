@@ -34,14 +34,61 @@ jobs:
         run: bun run release:mac
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
 
-      - name: Upload DMG artifact
+      - name: Get version from tag
+        id: version
+        run: echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Create update artifacts
+        run: |
+          # Create the update .tar.gz from the .app bundle
+          cd src-tauri/target/universal-apple-darwin/release/bundle/macos
+          tar -czf DuckBake.app.tar.gz DuckBake.app
+
+          # Sign the update artifact
+          echo "${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}" > /tmp/private.key
+          bunx @tauri-apps/cli signer sign \
+            -k /tmp/private.key \
+            -p "${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}" \
+            DuckBake.app.tar.gz
+          rm /tmp/private.key
+
+          # Read the signature
+          SIGNATURE=$(cat DuckBake.app.tar.gz.sig)
+
+          # Create latest.json for the updater
+          cat > latest.json << EOF
+          {
+            "version": "${{ steps.version.outputs.version }}",
+            "notes": "See release notes on GitHub",
+            "pub_date": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
+            "platforms": {
+              "darwin-universal": {
+                "signature": "$SIGNATURE",
+                "url": "https://github.com/${{ github.repository }}/releases/download/v${{ steps.version.outputs.version }}/DuckBake.app.tar.gz"
+              },
+              "darwin-aarch64": {
+                "signature": "$SIGNATURE",
+                "url": "https://github.com/${{ github.repository }}/releases/download/v${{ steps.version.outputs.version }}/DuckBake.app.tar.gz"
+              },
+              "darwin-x86_64": {
+                "signature": "$SIGNATURE",
+                "url": "https://github.com/${{ github.repository }}/releases/download/v${{ steps.version.outputs.version }}/DuckBake.app.tar.gz"
+              }
+            }
+          }
+          EOF
+
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: DuckBake-macOS
           path: |
             src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
-            src-tauri/target/universal-apple-darwin/release/bundle/macos/*.app
+            src-tauri/target/universal-apple-darwin/release/bundle/macos/DuckBake.app.tar.gz
+            src-tauri/target/universal-apple-darwin/release/bundle/macos/latest.json
 
   release:
     needs: build-macos
@@ -55,11 +102,15 @@ jobs:
         with:
           path: artifacts
 
-      - name: Create stable download link
+      - name: Prepare release files
         run: |
-          # Find the versioned DMG and copy it to a stable name
+          # Find and copy files to root for easier upload
           DMG_FILE=$(find artifacts -name "*.dmg" | head -1)
           cp "$DMG_FILE" artifacts/DuckBake-macOS.dmg
+
+          # Copy update artifacts
+          cp artifacts/DuckBake-macOS/DuckBake.app.tar.gz artifacts/
+          cp artifacts/DuckBake-macOS/latest.json artifacts/
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
@@ -69,3 +120,5 @@ jobs:
           files: |
             artifacts/DuckBake-macOS/*.dmg
             artifacts/DuckBake-macOS.dmg
+            artifacts/DuckBake.app.tar.gz
+            artifacts/latest.json

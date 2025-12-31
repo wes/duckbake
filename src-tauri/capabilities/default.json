@@ -5,6 +5,7 @@
   "windows": ["main"],
   "permissions": [
     "core:default",
+    "core:window:allow-start-dragging",
     "opener:default",
     "dialog:default",
     "dialog:allow-open",
@@ -25,6 +26,8 @@
         { "path": "$DOWNLOAD/**" },
         { "path": "$DOCUMENT/**" }
       ]
-    }
+    },
+    "updater:default",
+    "process:allow-restart"
   ]
 }

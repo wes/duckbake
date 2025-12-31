@@ -165,6 +165,43 @@ export function ChatPanel({ projectId }: ChatPanelProps) {
   // State to store visualization results for the current streaming message
   const [vizResults, setVizResults] = useState<Map<string, { config: VisualizationConfig; result?: QueryResult; error?: string; sql: string }[]>>(new Map());
 
+  // Generate a smart title from the user's message
+  const generateSmartTitle = (userMessage: string): string => {
+    // Clean up the message
+    let title = userMessage.trim();
+
+    // Remove common question starters to get to the meat of the question
+    const questionStarters = [
+      /^(can you |could you |please |help me |i want to |i need to |i'd like to |show me |tell me |explain |what is |what are |what's |how do i |how can i |how to |why is |why are |where is |where are |when is |when are |who is |who are )/i,
+    ];
+
+    for (const pattern of questionStarters) {
+      title = title.replace(pattern, "");
+    }
+
+    // Capitalize first letter
+    title = title.charAt(0).toUpperCase() + title.slice(1);
+
+    // Remove trailing question mark and punctuation
+    title = title.replace(/[?!.,;:]+$/, "");
+
+    // Limit to reasonable length (aim for 5-8 words or 40 chars)
+    const words = title.split(/\s+/);
+    if (words.length > 8) {
+      title = words.slice(0, 8).join(" ");
+    }
+    if (title.length > 40) {
+      title = title.slice(0, 40).trim();
+      // Don't cut off mid-word
+      const lastSpace = title.lastIndexOf(" ");
+      if (lastSpace > 20) {
+        title = title.slice(0, lastSpace);
+      }
+    }
+
+    return title || "New Chat";
+  };
+
   // Auto-execute query blocks after streaming completes
   const handleStreamingComplete = useCallback(async (content: string) => {
     const messageId = crypto.randomUUID();
@@ -341,7 +378,7 @@ export function ChatPanel({ projectId }: ChatPanelProps) {
       let conversationId = currentConversationId;
       if (!conversationId) {
         try {
-          const title = content.slice(0, 50) + (content.length > 50 ? "..." : "");
+          const title = generateSmartTitle(content);
           const convo = await createConversation(projectId, title);
           addConversation(convo);
           refetchConversations();
@@ -486,6 +523,31 @@ export function ChatPanel({ projectId }: ChatPanelProps) {
 
       {/* Main chat area */}
       <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Chat header with delete option */}
+        {currentConversationId && (
+          <div className="h-12 border-b flex items-center justify-between px-4 shrink-0">
+            <div className="flex items-center gap-2 text-sm">
+              <MessageSquare className="h-4 w-4 text-muted-foreground" />
+              <span className="font-medium truncate max-w-[300px]">
+                {conversations.find(c => c.id === currentConversationId)?.title || "Chat"}
+              </span>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground hover:text-destructive"
+              onClick={() => {
+                if (confirm("Delete this conversation?")) {
+                  deleteConvo.mutate(currentConversationId);
+                }
+              }}
+            >
+              <Trash2 className="h-4 w-4 mr-1" />
+              Delete
+            </Button>
+          </div>
+        )}
+
         {/* Messages */}
         <div className="flex-1 min-h-0 overflow-y-auto" ref={scrollRef}>
           <div className="p-4 space-y-4">

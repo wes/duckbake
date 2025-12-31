@@ -26,6 +26,10 @@ import {
 } from "lucide-react";
 import "./index.css";
 import duckbakeLogo from "./duckbake.png";
+import screenshotHome from "./screenshots/home.png";
+import screenshotBrowser from "./screenshots/project-browser.png";
+import screenshotChat from "./screenshots/project-chat.png";
+import screenshotQuery from "./screenshots/project-query.png";
 
 function DuckLogo({ className }: { className?: string }) {
 	return <img src={duckbakeLogo} alt="DuckBake Logo" className={className} />;
@@ -45,6 +49,12 @@ function NavBar() {
 						className="text-muted-foreground hover:text-foreground transition-colors"
 					>
 						Features
+					</a>
+					<a
+						href="#screenshots"
+						className="text-muted-foreground hover:text-foreground transition-colors"
+					>
+						Screenshots
 					</a>
 					<a
 						href="#how-it-works"
@@ -138,80 +148,11 @@ function Hero() {
 					</div>
 
 					<div className="relative rounded-2xl border border-border/50 shadow-2xl shadow-primary/10 overflow-hidden bg-card">
-						<div className="absolute top-0 left-0 right-0 h-10 bg-muted/50 flex items-center gap-2 px-4 border-b border-border/50">
-							<div className="w-3 h-3 rounded-full bg-red-400" />
-							<div className="w-3 h-3 rounded-full bg-yellow-400" />
-							<div className="w-3 h-3 rounded-full bg-green-400" />
-							<span className="ml-4 text-sm text-muted-foreground">
-								DuckBake
-							</span>
-						</div>
-						<div className="pt-10 p-6">
-							<div className="grid md:grid-cols-2 gap-4">
-								<div className="bg-muted/30 rounded-lg p-4 text-left">
-									<div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
-										<MessageSquare className="w-4 h-4 text-primary" />
-										AI Assistant
-									</div>
-									<div className="space-y-3">
-										<div className="bg-background rounded-lg p-3 text-sm">
-											Show me the top 10 customers by revenue this quarter
-										</div>
-										<div className="bg-primary/10 rounded-lg p-3 text-sm text-primary">
-											<code className="text-xs">
-												SELECT customer_name, SUM(amount) as revenue
-												<br />
-												FROM orders WHERE quarter = 'Q4'
-												<br />
-												GROUP BY customer_name
-												<br />
-												ORDER BY revenue DESC LIMIT 10;
-											</code>
-										</div>
-									</div>
-								</div>
-								<div className="bg-muted/30 rounded-lg p-4 text-left">
-									<div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
-										<Table className="w-4 h-4 text-primary" />
-										Results
-									</div>
-									<div className="bg-background rounded-lg overflow-hidden text-sm">
-										<table className="w-full">
-											<thead className="bg-muted/50">
-												<tr>
-													<th className="px-3 py-2 text-left font-medium">
-														Customer
-													</th>
-													<th className="px-3 py-2 text-right font-medium">
-														Revenue
-													</th>
-												</tr>
-											</thead>
-											<tbody className="divide-y divide-border">
-												<tr>
-													<td className="px-3 py-2">Acme Corp</td>
-													<td className="px-3 py-2 text-right text-primary font-medium">
-														$284,500
-													</td>
-												</tr>
-												<tr>
-													<td className="px-3 py-2">TechStart Inc</td>
-													<td className="px-3 py-2 text-right text-primary font-medium">
-														$198,200
-													</td>
-												</tr>
-												<tr>
-													<td className="px-3 py-2">Global Trade</td>
-													<td className="px-3 py-2 text-right text-primary font-medium">
-														$156,800
-													</td>
-												</tr>
-											</tbody>
-										</table>
-									</div>
-								</div>
-							</div>
-						</div>
+						<img
+							src={screenshotChat}
+							alt="DuckBake Chat Interface"
+							className="w-full h-auto"
+						/>
 					</div>
 				</div>
 			</div>
@@ -296,6 +237,67 @@ function Features() {
 								</CardDescription>
 							</CardContent>
 						</Card>
+					))}
+				</div>
+			</div>
+		</section>
+	);
+}
+
+function Screenshots() {
+	const screenshots = [
+		{
+			src: screenshotHome,
+			title: "Project Dashboard",
+			description: "Manage all your data projects in one place",
+		},
+		{
+			src: screenshotBrowser,
+			title: "Data Browser",
+			description: "Explore and filter your data with an intuitive interface",
+		},
+		{
+			src: screenshotQuery,
+			title: "SQL Editor",
+			description: "Write and execute powerful SQL queries with syntax highlighting",
+		},
+		{
+			src: screenshotChat,
+			title: "AI Chat",
+			description: "Ask questions in plain English and get instant SQL queries",
+		},
+	];
+
+	return (
+		<section id="screenshots" className="py-24">
+			<div className="max-w-6xl mx-auto px-6">
+				<div className="text-center mb-16">
+					<h2 className="text-4xl md:text-5xl font-bold mb-4">
+						See it in action
+					</h2>
+					<p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+						A beautiful, intuitive interface designed for productivity
+					</p>
+				</div>
+
+				<div className="grid md:grid-cols-2 gap-8">
+					{screenshots.map((screenshot, index) => (
+						<div
+							key={index}
+							className="group relative rounded-2xl border border-border/50 shadow-lg overflow-hidden bg-card hover:shadow-xl hover:border-primary/30 transition-all duration-300"
+						>
+							<img
+								src={screenshot.src}
+								alt={screenshot.title}
+								className="w-full h-auto"
+							/>
+							<div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end">
+								<div className="p-6 text-white">
+									<h3 className="text-xl font-bold mb-1">{screenshot.title}</h3>
+									<p className="text-white/80">{screenshot.description}</p>
+								</div>
+							</div>
+						</div>
 					))}
 				</div>
 			</div>
@@ -545,6 +547,7 @@ export function App() {
 			<main>
 				<Hero />
 				<Features />
+				<Screenshots />
 				<HowItWorks />
 				<Contribute />
 				<Testimonial />

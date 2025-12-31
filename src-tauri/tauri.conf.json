@@ -17,7 +17,10 @@
         "height": 800,
         "minWidth": 900,
         "minHeight": 600,
-        "dragDropEnabled": true
+        "dragDropEnabled": true,
+        "decorations": true,
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true
       }
     ],
     "security": {
@@ -55,5 +58,12 @@
       }
     }
   },
-  "plugins": {}
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "https://github.com/wes/duckbake/releases/latest/download/latest.json"
+      ],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDA2NDUxQTZCRjc3NzQ4Q0EKUldUS1NIZjNheHBGQm5Ca3k2alN3UW40L0VPYTVyWDBaR0dpSWVpbkhxeStCYWViVHU0UWI3Z3gK"
+    }
+  }
 }

@@ -16,13 +16,16 @@
     "build:release": "tauri build",
     "release:mac": "tauri build --target universal-apple-darwin",
     "release:mac-arm": "tauri build --target aarch64-apple-darwin",
-    "release:mac-intel": "tauri build --target x86_64-apple-darwin"
+    "release:mac-intel": "tauri build --target x86_64-apple-darwin",
+    "screenshots": "bun scripts/screenshots.ts",
+    "screenshots:manual": "./scripts/screenshots-manual.sh"
   },
   "dependencies": {
     "@catppuccin/codemirror": "^1.0.1",
     "@codemirror/lang-sql": "^6",
     "@radix-ui/react-dialog": "^1",
     "@radix-ui/react-dropdown-menu": "^2",
+    "@radix-ui/react-progress": "^1.1.8",
     "@radix-ui/react-scroll-area": "^1",
     "@radix-ui/react-select": "^2",
     "@radix-ui/react-separator": "^1",
@@ -38,6 +41,8 @@
     "@tauri-apps/plugin-dialog": "^2",
     "@tauri-apps/plugin-fs": "^2",
     "@tauri-apps/plugin-opener": "^2",
+    "@tauri-apps/plugin-process": "^2.3.1",
+    "@tauri-apps/plugin-updater": "^2.9.0",
     "@uiw/codemirror-theme-vscode": "^4.25.4",
     "@uiw/react-codemirror": "^4",
     "class-variance-authority": "^0.7",

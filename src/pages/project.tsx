@@ -1,31 +1,52 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import {
 	Database,
 	Table,
 	MessageSquare,
 	Code,
-	ChevronLeft,
 	List,
-	Sparkles,
+	Moon,
+	Sun,
+	ChevronDown,
+	Home,
+	Pencil,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from "@/components/ui/dialog";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { FileImportDialog, DropZone } from "@/components/import";
 import { TableViewer, VectorizationDialog } from "@/components/database";
 import { SqlEditor } from "@/components/query";
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { ChatPanel } from "@/components/chat";
-import { openProject, getTables, getTableSchema, updateProject } from "@/lib/tauri";
+import { SettingsDialog } from "@/components/settings";
+import {
+	openProject,
+	getTables,
+	getTableSchema,
+	listProjects,
+	updateProject,
+} from "@/lib/tauri";
 import { useProjectStore, useAppStore } from "@/stores";
+import { useThemeStore } from "@/stores/theme-store";
 
 export function ProjectPage() {
 	const { id } = useParams<{ id: string }>();
@@ -33,16 +54,33 @@ export function ProjectPage() {
 	const queryClient = useQueryClient();
 	const { activeTab, setActiveTab, sidebarOpen } = useAppStore();
 	const { setCurrentProject, selectedTable, selectTable } = useProjectStore();
+	const { mode } = useThemeStore();
+	const isDark = mode === "dark" || (mode === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
 	const [importDialogOpen, setImportDialogOpen] = useState(false);
-	const [isEditingTitle, setIsEditingTitle] = useState(false);
-	const [editedTitle, setEditedTitle] = useState("");
 	const [vectorizeTable, setVectorizeTable] = useState<string | null>(null);
-	const titleInputRef = useRef<HTMLInputElement>(null);
+	const [settingsOpen, setSettingsOpen] = useState(false);
+	const [renameDialogOpen, setRenameDialogOpen] = useState(false);
+	const [newName, setNewName] = useState("");
+
+	const handleDrag = async (e: React.MouseEvent) => {
+		const target = e.target as HTMLElement;
+		const interactive = target.closest(
+			"button, input, a, [role='button'], [data-radix-collection-item]",
+		);
+		if (!interactive) {
+			await getCurrentWindow().startDragging();
+		}
+	};
 
 	const { data: project, isLoading: projectLoading } = useQuery({
 		queryKey: ["project", id],
 		queryFn: () => openProject(id!),
 		enabled: !!id,
+	});
+
+	const { data: allProjects = [] } = useQuery({
+		queryKey: ["projects"],
+		queryFn: listProjects,
 	});
 
 	const { data: tables = [], isLoading: tablesLoading } = useQuery({
@@ -57,48 +95,32 @@ export function ProjectPage() {
 		enabled: !!id && !!selectedTable,
 	});
 
+	const renameMutation = useMutation({
+		mutationFn: (name: string) => updateProject(id!, name),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["project", id] });
+			queryClient.invalidateQueries({ queryKey: ["projects"] });
+			setRenameDialogOpen(false);
+		},
+	});
+
+	const handleRename = () => {
+		if (newName.trim()) {
+			renameMutation.mutate(newName.trim());
+		}
+	};
+
+	const openRenameDialog = () => {
+		setNewName(project?.name || "");
+		setRenameDialogOpen(true);
+	};
+
 	useEffect(() => {
 		if (project) {
 			setCurrentProject(project);
 		}
 		return () => setCurrentProject(null);
 	}, [project, setCurrentProject]);
-
-	useEffect(() => {
-		if (isEditingTitle && titleInputRef.current) {
-			titleInputRef.current.focus();
-			titleInputRef.current.select();
-		}
-	}, [isEditingTitle]);
-
-	const startEditingTitle = () => {
-		if (project) {
-			setEditedTitle(project.name);
-			setIsEditingTitle(true);
-		}
-	};
-
-	const saveTitle = async () => {
-		if (!id || !editedTitle.trim() || editedTitle === project?.name) {
-			setIsEditingTitle(false);
-			return;
-		}
-		try {
-			await updateProject(id, editedTitle.trim());
-			queryClient.invalidateQueries({ queryKey: ["project", id] });
-		} catch (error) {
-			console.error("Failed to update project name:", error);
-		}
-		setIsEditingTitle(false);
-	};
-
-	const handleTitleKeyDown = (e: React.KeyboardEvent) => {
-		if (e.key === "Enter") {
-			saveTitle();
-		} else if (e.key === "Escape") {
-			setIsEditingTitle(false);
-		}
-	};
 
 	if (projectLoading) {
 		return (
@@ -124,35 +146,45 @@ export function ProjectPage() {
 			className="h-screen flex flex-col"
 		>
 			{/* Header */}
-			<header className="h-14 border-b flex items-center px-4 shrink-0">
-				<div className="flex items-center gap-3">
-					<Button variant="ghost" size="icon" onClick={() => navigate("/")}>
-						<ChevronLeft className="h-4 w-4" />
-					</Button>
-					<Separator orientation="vertical" className="h-6" />
-					<div className="flex items-center gap-2">
-						<Database className="h-5 w-5 text-muted-foreground" />
-						{isEditingTitle ? (
-							<input
-								ref={titleInputRef}
-								type="text"
-								value={editedTitle}
-								onChange={(e) => setEditedTitle(e.target.value)}
-								onBlur={saveTitle}
-								onKeyDown={handleTitleKeyDown}
-								className="font-semibold bg-transparent border-b border-foreground/20 outline-none px-0 py-0.5 min-w-[100px]"
-							/>
-						) : (
-							<button
-								onClick={startEditingTitle}
-								className="font-semibold hover:text-muted-foreground transition-colors cursor-text"
-							>
-								{project.name}
+			<header
+				className="h-14 border-b flex items-center pl-24 pr-4 shrink-0"
+				onMouseDown={handleDrag}
+			>
+				<div className="flex items-center gap-2" onMouseDown={handleDrag}>
+					<DropdownMenu>
+						<DropdownMenuTrigger asChild>
+							<button className="flex items-center gap-2 hover:bg-accent px-2 py-1.5 rounded-md transition-colors">
+								<Database className="h-4 w-4 text-muted-foreground" />
+								<span className="font-semibold">{project.name}</span>
+								<ChevronDown className="h-4 w-4 text-muted-foreground" />
 							</button>
-						)}
-					</div>
+						</DropdownMenuTrigger>
+						<DropdownMenuContent align="start" className="w-56">
+							<DropdownMenuItem onClick={() => navigate("/")}>
+								<Home className="h-4 w-4 mr-2" />
+								All Projects
+							</DropdownMenuItem>
+							<DropdownMenuSeparator />
+							<DropdownMenuItem onClick={openRenameDialog}>
+								<Database className="h-4 w-4 mr-2 text-primary" />
+								<span className="flex-1">{project.name}</span>
+								<Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+							</DropdownMenuItem>
+							{allProjects
+								.filter((p) => p.id !== id)
+								.map((p) => (
+									<DropdownMenuItem
+										key={p.id}
+										onClick={() => navigate(`/project/${p.id}`)}
+									>
+										<Database className="h-4 w-4 mr-2 text-muted-foreground" />
+										{p.name}
+									</DropdownMenuItem>
+								))}
+						</DropdownMenuContent>
+					</DropdownMenu>
 				</div>
-				<div className="flex-1 flex justify-center">
+				<div className="flex-1 flex justify-center" onMouseDown={handleDrag}>
 					<TabsList className="h-9 bg-transparent">
 						<TabsTrigger value="browser" className="gap-2">
 							<Table className="h-4 w-4" />
@@ -172,8 +204,14 @@ export function ProjectPage() {
 						</TabsTrigger>
 					</TabsList>
 				</div>
-				<div className="flex items-center gap-2">
-					<ThemeToggle />
+				<div className="flex items-center gap-2" onMouseDown={handleDrag}>
+					<Button
+						variant="ghost"
+						size="icon"
+						onClick={() => setSettingsOpen(true)}
+					>
+						{isDark ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+					</Button>
 				</div>
 			</header>
 
@@ -213,34 +251,10 @@ export function ProjectPage() {
 												}}
 											>
 												<Table className="h-4 w-4 shrink-0" />
-												<span className="truncate">{table.name}</span>
-												<div className="ml-auto flex items-center gap-1">
-													<Tooltip>
-														<TooltipTrigger asChild>
-															<button
-																className={`p-1 rounded hover:bg-background/50 transition-colors ${
-																	table.isVectorized
-																		? "text-primary"
-																		: "opacity-40 hover:opacity-100"
-																}`}
-																onClick={(e) => {
-																	e.stopPropagation();
-																	setVectorizeTable(table.name);
-																}}
-															>
-																<Sparkles className="h-3.5 w-3.5" />
-															</button>
-														</TooltipTrigger>
-														<TooltipContent>
-															{table.isVectorized
-																? "Vectorized - Click to manage"
-																: "Enable vectorization"}
-														</TooltipContent>
-													</Tooltip>
-													<span className="text-xs opacity-60">
-														{table.rowCount.toLocaleString()}
-													</span>
-												</div>
+												<span className="truncate flex-1 min-w-0">{table.name}</span>
+												<span className="text-xs opacity-60 shrink-0">
+													{table.rowCount.toLocaleString()}
+												</span>
 											</div>
 										))}
 										<div className="pt-4">
@@ -257,7 +271,12 @@ export function ProjectPage() {
 				<main className="flex-1 flex flex-col min-h-0 overflow-hidden">
 					<TabsContent value="browser" className="flex-1 m-0 overflow-hidden">
 						{selectedTable ? (
-							<TableViewer projectId={id!} tableName={selectedTable} />
+							<TableViewer
+								projectId={id!}
+								tableName={selectedTable}
+								isVectorized={tables.find((t) => t.name === selectedTable)?.isVectorized}
+								onVectorize={() => setVectorizeTable(selectedTable)}
+							/>
 						) : (
 							<div className="flex flex-col items-center justify-center h-full text-center">
 								<Table className="h-12 w-12 text-muted-foreground mb-4" />
@@ -282,19 +301,36 @@ export function ProjectPage() {
 									<table className="w-full text-sm">
 										<thead className="bg-muted/50">
 											<tr>
-												<th className="text-left px-4 py-2 font-medium">Column</th>
-												<th className="text-left px-4 py-2 font-medium">Type</th>
-												<th className="text-left px-4 py-2 font-medium">Nullable</th>
-												<th className="text-left px-4 py-2 font-medium">Primary Key</th>
+												<th className="text-left px-4 py-2 font-medium">
+													Column
+												</th>
+												<th className="text-left px-4 py-2 font-medium">
+													Type
+												</th>
+												<th className="text-left px-4 py-2 font-medium">
+													Nullable
+												</th>
+												<th className="text-left px-4 py-2 font-medium">
+													Primary Key
+												</th>
 											</tr>
 										</thead>
 										<tbody>
 											{tableSchema.columns.map((col, i) => (
-												<tr key={col.name} className={i % 2 === 0 ? "" : "bg-muted/30"}>
+												<tr
+													key={col.name}
+													className={i % 2 === 0 ? "" : "bg-muted/30"}
+												>
 													<td className="px-4 py-2 font-mono">{col.name}</td>
-													<td className="px-4 py-2 text-muted-foreground font-mono">{col.dataType}</td>
-													<td className="px-4 py-2 text-muted-foreground">{col.nullable ? "Yes" : "No"}</td>
-													<td className="px-4 py-2 text-muted-foreground">{col.isPrimaryKey ? "Yes" : "—"}</td>
+													<td className="px-4 py-2 text-muted-foreground font-mono">
+														{col.dataType}
+													</td>
+													<td className="px-4 py-2 text-muted-foreground">
+														{col.nullable ? "Yes" : "No"}
+													</td>
+													<td className="px-4 py-2 text-muted-foreground">
+														{col.isPrimaryKey ? "Yes" : "—"}
+													</td>
 												</tr>
 											))}
 										</tbody>
@@ -341,6 +377,47 @@ export function ProjectPage() {
 					onOpenChange={(open) => !open && setVectorizeTable(null)}
 				/>
 			)}
+
+			{/* Settings Dialog */}
+			<SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+
+			{/* Rename Dialog */}
+			<Dialog open={renameDialogOpen} onOpenChange={setRenameDialogOpen}>
+				<DialogContent>
+					<DialogHeader>
+						<DialogTitle>Rename Project</DialogTitle>
+						<DialogDescription>
+							Enter a new name for your project.
+						</DialogDescription>
+					</DialogHeader>
+					<div className="py-4">
+						<Input
+							placeholder="Project name"
+							value={newName}
+							onChange={(e) => setNewName(e.target.value)}
+							onKeyDown={(e) => {
+								if (e.key === "Enter" && newName.trim()) {
+									handleRename();
+								}
+							}}
+						/>
+					</div>
+					<DialogFooter>
+						<Button
+							variant="outline"
+							onClick={() => setRenameDialogOpen(false)}
+						>
+							Cancel
+						</Button>
+						<Button
+							onClick={handleRename}
+							disabled={!newName.trim() || renameMutation.isPending}
+						>
+							{renameMutation.isPending ? "Saving..." : "Save"}
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 		</Tabs>
 	);
 }
