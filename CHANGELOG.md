@@ -2,6 +2,11 @@
 
 All notable changes to DuckBake will be documented in this file.
 
+## [0.0.22] - 2026-01-02
+
+### Changes
+
+- Add more debug for signing key
 ## [0.0.21] - 2026-01-02
 
 ### Changes
