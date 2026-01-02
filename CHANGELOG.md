@@ -2,6 +2,11 @@
 
 All notable changes to DuckBake will be documented in this file.
 
+## [0.0.25] - 2026-01-02
+
+### Changes
+
+- Debug: disable caches and check for stale configs
 ## [0.0.24] - 2026-01-02
 
 ### Changes
