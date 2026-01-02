@@ -49,7 +49,7 @@ jobs:
 
           # Sign the update artifact (only if key is set)
           if [ -n "${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}" ]; then
-            echo "${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}" > /tmp/private.key
+            echo "${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}" | base64 -d > /tmp/private.key
             bunx @tauri-apps/cli signer sign \
               -k /tmp/private.key \
               -p "${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}" \
