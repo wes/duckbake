@@ -2,6 +2,11 @@
 
 All notable changes to DuckBake will be documented in this file.
 
+## [0.0.21] - 2026-01-02
+
+### Changes
+
+- Fix pubkey format - use raw key, not base64 encoded
 ## [0.0.20] - 2026-01-02
 
 ### Changes
