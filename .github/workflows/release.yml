@@ -42,16 +42,19 @@ jobs:
         run: echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
 
       - name: Create update artifacts
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: |
           # Create the update .tar.gz from the .app bundle
           cd src-tauri/target/universal-apple-darwin/release/bundle/macos
           tar -czf DuckBake.app.tar.gz DuckBake.app
 
           # Sign the update artifact (only if key is set)
-          if [ -n "${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}" ]; then
+          if [ -n "$TAURI_SIGNING_PRIVATE_KEY" ]; then
             bunx @tauri-apps/cli signer sign \
-              -k "${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}" \
-              -p "${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}" \
+              -k "$TAURI_SIGNING_PRIVATE_KEY" \
+              -p "$TAURI_SIGNING_PRIVATE_KEY_PASSWORD" \
               DuckBake.app.tar.gz
             SIGNATURE=$(cat DuckBake.app.tar.gz.sig)
           else
