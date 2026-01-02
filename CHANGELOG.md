@@ -2,6 +2,11 @@
 
 All notable changes to DuckBake will be documented in this file.
 
+## [0.0.27] - 2026-01-02
+
+### Changes
+
+- Pubkey again
 ## [0.0.26] - 2026-01-02
 
 ### Changes
