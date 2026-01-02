@@ -22,36 +22,20 @@ jobs:
         with:
           targets: aarch64-apple-darwin,x86_64-apple-darwin
 
-      # Temporarily disabled to debug
-      # - name: Rust cache
-      #   uses: swatinem/rust-cache@v2
-      #   with:
-      #     workspaces: src-tauri
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
 
       - name: Install frontend dependencies
         run: bun install
 
-      - name: Debug - check for cached configs
-        run: |
-          echo "=== Checking for any .env files ==="
-          find . -name ".env*" -o -name "*.env" 2>/dev/null || echo "None found"
-
-          echo "=== Checking pubkey in tauri.conf.json ==="
-          grep -A1 pubkey src-tauri/tauri.conf.json
-
-          echo "=== Check for any TAURI env vars already set ==="
-          env | grep -i tauri || echo "No TAURI env vars"
-
-          echo "=== Check bun cache ==="
-          ls -la node_modules/.cache 2>/dev/null || echo "No bun cache dir"
-
       - name: Build universal macOS app
-        run: bun run release:mac -- -v
+        run: bun run release:mac
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Temporarily disabled to debug - remove these comments to re-enable
-          # TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          # TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
 
       - name: Get version from tag
         id: version
