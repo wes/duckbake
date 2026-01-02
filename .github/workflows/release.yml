@@ -22,25 +22,28 @@ jobs:
         with:
           targets: aarch64-apple-darwin,x86_64-apple-darwin
 
-      - name: Rust cache
-        uses: swatinem/rust-cache@v2
-        with:
-          workspaces: src-tauri
+      # Temporarily disabled to debug
+      # - name: Rust cache
+      #   uses: swatinem/rust-cache@v2
+      #   with:
+      #     workspaces: src-tauri
 
       - name: Install frontend dependencies
         run: bun install
 
-      - name: Debug key format
+      - name: Debug - check for cached configs
         run: |
-          echo "Key length: ${#TAURI_SIGNING_PRIVATE_KEY}"
-          echo "First 20 chars: ${TAURI_SIGNING_PRIVATE_KEY:0:20}"
-          echo "Char at position 12: ${TAURI_SIGNING_PRIVATE_KEY:12:1}"
-          echo "Hex dump of first 20 chars:"
-          echo -n "${TAURI_SIGNING_PRIVATE_KEY:0:20}" | xxd
-          echo "Password length: ${#TAURI_SIGNING_PRIVATE_KEY_PASSWORD}"
-        env:
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          echo "=== Checking for any .env files ==="
+          find . -name ".env*" -o -name "*.env" 2>/dev/null || echo "None found"
+
+          echo "=== Checking pubkey in tauri.conf.json ==="
+          grep -A1 pubkey src-tauri/tauri.conf.json
+
+          echo "=== Check for any TAURI env vars already set ==="
+          env | grep -i tauri || echo "No TAURI env vars"
+
+          echo "=== Check bun cache ==="
+          ls -la node_modules/.cache 2>/dev/null || echo "No bun cache dir"
 
       - name: Build universal macOS app
         run: bun run release:mac -- -v
