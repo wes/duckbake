@@ -2,6 +2,11 @@
 
 All notable changes to DuckBake will be documented in this file.
 
+## [0.0.15] - 2026-01-02
+
+### Changes
+
+- Public key
 ## [0.0.14] - 2026-01-02
 
 ### Changes
