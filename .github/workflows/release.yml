@@ -30,6 +30,13 @@ jobs:
       - name: Install frontend dependencies
         run: bun install
 
+      - name: Debug key format
+        run: |
+          echo "Key length: ${#TAURI_SIGNING_PRIVATE_KEY}"
+          echo "First 15 chars: ${TAURI_SIGNING_PRIVATE_KEY:0:15}"
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+
       - name: Build universal macOS app
         run: bun run release:mac
         env:
