@@ -49,12 +49,10 @@ jobs:
 
           # Sign the update artifact (only if key is set)
           if [ -n "${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}" ]; then
-            echo "${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}" | base64 -d > /tmp/private.key
             bunx @tauri-apps/cli signer sign \
-              -k /tmp/private.key \
+              -k "${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}" \
               -p "${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}" \
               DuckBake.app.tar.gz
-            rm /tmp/private.key
             SIGNATURE=$(cat DuckBake.app.tar.gz.sig)
           else
             echo "Warning: TAURI_SIGNING_PRIVATE_KEY not set, skipping signing"
