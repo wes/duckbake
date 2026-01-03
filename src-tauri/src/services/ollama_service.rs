@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use futures::StreamExt;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
@@ -9,6 +11,9 @@ use crate::models::{OllamaModel, OllamaStatus, OllamaTagsResponse, OllamaVersion
 const DEFAULT_EMBEDDING_MODEL: &str = "nomic-embed-text";
 
 const OLLAMA_BASE_URL: &str = "http://localhost:11434";
+
+// Timeout for embedding requests (model loading can take time)
+const EMBEDDING_TIMEOUT_SECS: u64 = 300; // 5 minutes
 
 #[derive(Debug, Serialize)]
 struct ChatRequest {
@@ -40,6 +45,8 @@ struct ChatMessageContent {
 struct EmbeddingRequest {
     model: String,
     input: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    keep_alive: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -238,6 +245,50 @@ IMPORTANT:
         Ok(())
     }
 
+    /// Warm up the embedding model by sending a test request
+    /// This loads the model into memory so subsequent requests are fast
+    pub async fn warmup_embedding_model(&self, model: Option<&str>) -> Result<()> {
+        let url = format!("{}/api/embed", self.base_url);
+        let model = model.unwrap_or(DEFAULT_EMBEDDING_MODEL);
+
+        let request = EmbeddingRequest {
+            model: model.to_string(),
+            input: vec!["warmup".to_string()],
+            keep_alive: Some("10m".to_string()),
+        };
+
+        let response = self
+            .client
+            .post(&url)
+            .timeout(Duration::from_secs(EMBEDDING_TIMEOUT_SECS))
+            .json(&request)
+            .send()
+            .await
+            .map_err(|e| {
+                if e.is_timeout() {
+                    AppError::Custom(format!(
+                        "Model warmup timed out after {} seconds",
+                        EMBEDDING_TIMEOUT_SECS
+                    ))
+                } else if e.is_connect() {
+                    AppError::OllamaNotAvailable
+                } else {
+                    AppError::Custom(format!("Failed to connect to Ollama: {}", e))
+                }
+            })?;
+
+        if !response.status().is_success() {
+            let status = response.status();
+            let body = response.text().await.unwrap_or_default();
+            return Err(AppError::Custom(format!(
+                "Model warmup failed ({}): {}. Make sure '{}' model is installed (ollama pull {})",
+                status, body, model, model
+            )));
+        }
+
+        Ok(())
+    }
+
     /// Generate embeddings for a batch of texts
     pub async fn generate_embeddings(
         &self,
@@ -250,15 +301,29 @@ IMPORTANT:
         let request = EmbeddingRequest {
             model: model.to_string(),
             input: texts,
+            keep_alive: Some("10m".to_string()), // Keep model loaded for 10 minutes
         };
 
+        // Use a longer timeout for embeddings since model loading can take time
         let response = self
             .client
             .post(&url)
+            .timeout(Duration::from_secs(EMBEDDING_TIMEOUT_SECS))
             .json(&request)
             .send()
             .await
-            .map_err(|_| AppError::OllamaNotAvailable)?;
+            .map_err(|e| {
+                if e.is_timeout() {
+                    AppError::Custom(format!(
+                        "Embedding request timed out after {} seconds. The model may still be loading - try again.",
+                        EMBEDDING_TIMEOUT_SECS
+                    ))
+                } else if e.is_connect() {
+                    AppError::OllamaNotAvailable
+                } else {
+                    AppError::Custom(format!("Failed to connect to Ollama: {}", e))
+                }
+            })?;
 
         if !response.status().is_success() {
             let status = response.status();

@@ -159,6 +159,12 @@ export async function removeVectorization(
   return invoke("remove_vectorization", { projectId, tableName });
 }
 
+export async function cancelVectorization(
+  tableName: string
+): Promise<void> {
+  return invoke("cancel_vectorization", { tableName });
+}
+
 export async function semanticSearch(
   projectId: string,
   tableName: string,

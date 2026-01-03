@@ -65,7 +65,34 @@ pub async fn vectorize_table(
         .unwrap_or(0)
     };
 
-    // Emit initial progress
+    // Emit initial progress - loading model
+    let _ = window.emit(
+        "vectorization-progress",
+        VectorizationProgress {
+            table_name: table_name.clone(),
+            total_rows,
+            processed_rows: 0,
+            status: "loading_model".to_string(),
+            error: None,
+        },
+    );
+
+    // Warm up the embedding model first (loads it into memory)
+    if let Err(e) = state.ollama.warmup_embedding_model(Some(DEFAULT_EMBEDDING_MODEL)).await {
+        let _ = window.emit(
+            "vectorization-progress",
+            VectorizationProgress {
+                table_name: table_name.clone(),
+                total_rows,
+                processed_rows: 0,
+                status: "error".to_string(),
+                error: Some(e.to_string()),
+            },
+        );
+        return Err(e);
+    }
+
+    // Emit progress - now processing
     let _ = window.emit(
         "vectorization-progress",
         VectorizationProgress {
@@ -77,16 +104,36 @@ pub async fn vectorize_table(
         },
     );
 
-    // Remove existing embeddings for this table
+    // Initialize embeddings table and remove existing embeddings
     {
         let conn = conn.lock();
+        state.duckdb.init_embeddings_table(&conn)?;
         state.duckdb.remove_vectorization(&conn, &table_name)?;
     }
+
+    // Clear any previous cancellation flag for this table
+    state.clear_vectorization_cancellation(&table_name);
 
     let mut processed = 0i64;
     let mut offset = 0usize;
 
     loop {
+        // Check if cancellation was requested
+        if state.should_cancel_vectorization(&table_name) {
+            state.clear_vectorization_cancellation(&table_name);
+            let _ = window.emit(
+                "vectorization-progress",
+                VectorizationProgress {
+                    table_name: table_name.clone(),
+                    total_rows,
+                    processed_rows: processed,
+                    status: "cancelled".to_string(),
+                    error: None,
+                },
+            );
+            return Ok(());
+        }
+
         // Get batch of text to vectorize
         let rows: Vec<(i64, String)> = {
             let conn = conn.lock();
@@ -125,7 +172,6 @@ pub async fn vectorize_table(
 
         {
             let conn = conn.lock();
-            // Use a combined column name for storage
             let column_key = columns.join("+");
             state.duckdb.store_embeddings(
                 &conn,
@@ -181,6 +227,15 @@ pub async fn remove_vectorization(
     let conn = state.duckdb.get_connection(&project_id, &db_path)?;
     let conn = conn.lock();
     state.duckdb.remove_vectorization(&conn, &table_name)
+}
+
+#[tauri::command]
+pub async fn cancel_vectorization(
+    state: State<'_, AppState>,
+    table_name: String,
+) -> Result<()> {
+    state.cancel_vectorization(&table_name);
+    Ok(())
 }
 
 #[tauri::command]

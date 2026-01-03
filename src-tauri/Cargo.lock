@@ -1203,7 +1203,7 @@ dependencies = [
 
 [[package]]
 name = "duckbake"
-version = "0.0.15"
+version = "0.0.31"
 dependencies = [
  "anyhow",
  "calamine",

@@ -36,6 +36,21 @@ interface ChatPanelProps {
   projectId: string;
 }
 
+// Common embedding model name patterns to filter out from chat
+const EMBEDDING_MODEL_PATTERNS = [
+  "embed",
+  "all-minilm",
+  "bge-",
+  "e5-",
+  "gte-",
+  "paraphrase",
+];
+
+function isEmbeddingModel(modelName: string): boolean {
+  const name = modelName.toLowerCase();
+  return EMBEDDING_MODEL_PATTERNS.some((pattern) => name.includes(pattern));
+}
+
 // Parsed query block from AI response
 interface QueryBlock {
   sql: string;
@@ -174,6 +189,7 @@ export function ChatPanel({ projectId }: ChatPanelProps) {
     queryKey: ["ollama-models"],
     queryFn: listOllamaModels,
     enabled: ollamaStatus?.connected,
+    select: (data) => data.filter((model) => !isEmbeddingModel(model.name)),
   });
 
   const { data: projectContext } = useQuery({

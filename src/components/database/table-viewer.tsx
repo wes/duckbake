@@ -6,7 +6,9 @@ import {
   ChevronsLeft,
   RefreshCw,
   Sparkles,
+  Loader2,
 } from "lucide-react";
+import { useVectorizationStore } from "@/stores";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -36,6 +38,9 @@ export function TableViewer({ projectId, tableName, isVectorized, onVectorize }:
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(100);
   const [sort, setSort] = useState<SortState | null>(null);
+  const { isVectorizing, getProgress } = useVectorizationStore();
+  const vectorizing = isVectorizing(tableName);
+  const progress = getProgress(tableName);
 
   // Reset state when table changes
   const prevTableName = useRef(tableName);
@@ -100,17 +105,25 @@ export function TableViewer({ projectId, tableName, isVectorized, onVectorize }:
               <TooltipTrigger asChild>
                 <button
                   className={`p-1.5 rounded-md hover:bg-muted transition-colors ${
-                    isVectorized
+                    vectorizing
+                      ? "text-primary"
+                      : isVectorized
                       ? "text-primary"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
                   onClick={onVectorize}
                 >
-                  <Sparkles className="h-4 w-4" />
+                  {vectorizing ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-4 w-4" />
+                  )}
                 </button>
               </TooltipTrigger>
               <TooltipContent>
-                {isVectorized
+                {vectorizing
+                  ? `Vectorizing... ${progress?.processedRows || 0}/${progress?.totalRows || 0}`
+                  : isVectorized
                   ? "Vectorized - Click to manage"
                   : "Enable vectorization"}
               </TooltipContent>

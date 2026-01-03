@@ -120,6 +120,7 @@ pub fn run() {
             get_text_columns,
             vectorize_table,
             remove_vectorization,
+            cancel_vectorization,
             semantic_search,
             // Conversation commands
             list_conversations,

@@ -18,7 +18,7 @@ export interface VectorizationProgress {
   tableName: string;
   totalRows: number;
   processedRows: number;
-  status: "pending" | "processing" | "completed" | "error";
+  status: "pending" | "loading_model" | "processing" | "completed" | "cancelled" | "error";
   error: string | null;
 }
 

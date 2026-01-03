@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { listen } from "@tauri-apps/api/event";
-import { Sparkles, Loader2, Check, X } from "lucide-react";
+import { Sparkles, Loader2, Check, X, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -16,6 +16,8 @@ import {
   getVectorizationStatus,
   vectorizeTable,
   removeVectorization,
+  cancelVectorization,
+  getTables,
 } from "@/lib/tauri";
 import type { VectorizationProgress } from "@/types";
 
@@ -48,6 +50,15 @@ export function VectorizationDialog({
     enabled: open && !!tableName,
   });
 
+  // Get table info for row count
+  const { data: tables = [] } = useQuery({
+    queryKey: ["tables", projectId],
+    queryFn: () => getTables(projectId),
+    enabled: open && !!projectId,
+  });
+  const tableInfo = tables.find((t) => t.name === tableName);
+  const totalRows = tableInfo?.rowCount || 0;
+
   // Pre-select all text columns
   useEffect(() => {
     if (textColumns.length > 0 && selectedColumns.length === 0) {
@@ -63,7 +74,7 @@ export function VectorizationDialog({
       "vectorization-progress",
       (event) => {
         setProgress(event.payload);
-        if (event.payload.status === "completed") {
+        if (event.payload.status === "completed" || event.payload.status === "cancelled") {
           queryClient.invalidateQueries({
             queryKey: ["vectorization-status", projectId, tableName],
           });
@@ -104,6 +115,10 @@ export function VectorizationDialog({
     },
   });
 
+  const cancelMutation = useMutation({
+    mutationFn: () => cancelVectorization(tableName),
+  });
+
   const toggleColumn = (column: string) => {
     setSelectedColumns((prev) =>
       prev.includes(column)
@@ -114,14 +129,14 @@ export function VectorizationDialog({
 
   const isProcessing =
     vectorizeMutation.isPending ||
-    (progress?.status === "processing" && progress.tableName === tableName);
+    ((progress?.status === "processing" || progress?.status === "loading_model") &&
+      progress.tableName === tableName);
 
   const handleClose = () => {
-    if (!isProcessing) {
-      setProgress(null);
-      setMutationError(null);
-      onOpenChange(false);
-    }
+    // Always allow closing - vectorization continues in background
+    setProgress(null);
+    setMutationError(null);
+    onOpenChange(false);
   };
 
   return (
@@ -143,19 +158,21 @@ export function VectorizationDialog({
           </div>
         ) : (
           <div className="space-y-4">
-            {status?.isVectorized ? (
+            {status?.isVectorized && !isProcessing ? (
               <div className="rounded-lg border p-4 space-y-2">
                 <div className="flex items-center gap-2 text-sm font-medium text-green-600 dark:text-green-400">
                   <Check className="h-4 w-4" />
                   Vectorized
                 </div>
                 <div className="text-sm text-muted-foreground space-y-1">
-                  <p>Embeddings: {status.embeddingCount.toLocaleString()}</p>
+                  <p>
+                    Embeddings: {status.embeddingCount.toLocaleString()} of {totalRows.toLocaleString()} rows
+                  </p>
                   <p>Model: {status.embeddingModel || "unknown"}</p>
                   <p>Columns: {status.vectorizedColumns.join(", ")}</p>
                 </div>
               </div>
-            ) : (
+            ) : !isProcessing ? (
               <>
                 {textColumns.length === 0 ? (
                   <div className="text-sm text-muted-foreground py-4 text-center">
@@ -188,29 +205,40 @@ export function VectorizationDialog({
                   </div>
                 )}
               </>
-            )}
+            ) : null}
 
             {isProcessing && progress && (
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
-                  <span>Processing...</span>
                   <span>
-                    {progress.processedRows.toLocaleString()} /{" "}
-                    {progress.totalRows.toLocaleString()}
+                    {progress.status === "loading_model"
+                      ? "Loading embedding model..."
+                      : "Vectorizing..."}
                   </span>
                 </div>
-                <div className="h-2 bg-muted rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-primary transition-all duration-300"
-                    style={{
-                      width: `${
-                        progress.totalRows > 0
-                          ? (progress.processedRows / progress.totalRows) * 100
-                          : 0
-                      }%`,
-                    }}
-                  />
-                </div>
+                {progress.status === "loading_model" ? (
+                  <p className="text-xs text-muted-foreground">
+                    This may take a minute the first time
+                  </p>
+                ) : (
+                  <>
+                    <p className="text-sm text-muted-foreground">
+                      Embeddings: {progress.processedRows.toLocaleString()} of {progress.totalRows.toLocaleString()} rows
+                    </p>
+                    <div className="h-2 bg-muted rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-primary transition-all duration-300"
+                        style={{
+                          width: `${
+                            progress.totalRows > 0
+                              ? (progress.processedRows / progress.totalRows) * 100
+                              : 0
+                          }%`,
+                        }}
+                      />
+                    </div>
+                  </>
+                )}
               </div>
             )}
 
@@ -228,7 +256,7 @@ export function VectorizationDialog({
         )}
 
         <DialogFooter className="gap-2">
-          {status?.isVectorized ? (
+          {status?.isVectorized && !isProcessing ? (
             <>
               <Button variant="outline" onClick={handleClose}>
                 Close
@@ -246,6 +274,24 @@ export function VectorizationDialog({
                 Remove Vectorization
               </Button>
             </>
+          ) : isProcessing ? (
+            <>
+              <Button
+                variant="destructive"
+                onClick={() => cancelMutation.mutate()}
+                disabled={cancelMutation.isPending}
+              >
+                {cancelMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <Square className="h-4 w-4 mr-2" />
+                )}
+                Stop
+              </Button>
+              <Button variant="outline" onClick={handleClose}>
+                Run in Background
+              </Button>
+            </>
           ) : (
             <>
               <Button variant="outline" onClick={handleClose}>
@@ -253,18 +299,10 @@ export function VectorizationDialog({
               </Button>
               <Button
                 onClick={() => vectorizeMutation.mutate()}
-                disabled={
-                  isProcessing ||
-                  selectedColumns.length === 0 ||
-                  textColumns.length === 0
-                }
+                disabled={selectedColumns.length === 0 || textColumns.length === 0}
               >
-                {isProcessing ? (
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                ) : (
-                  <Sparkles className="h-4 w-4 mr-2" />
-                )}
-                {isProcessing ? "Vectorizing..." : "Vectorize"}
+                <Sparkles className="h-4 w-4 mr-2" />
+                Vectorize
               </Button>
             </>
           )}

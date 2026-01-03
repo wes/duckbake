@@ -251,17 +251,30 @@ impl DuckDbService {
 
     /// Initialize the embeddings table if it doesn't exist
     pub fn init_embeddings_table(&self, conn: &Connection) -> Result<()> {
+        // Check if table exists with old schema (had 'id' column) and drop it
+        let has_old_table: bool = conn
+            .query_row(
+                "SELECT COUNT(*) > 0 FROM information_schema.columns WHERE table_name = '_duckbake_embeddings' AND column_name = 'id'",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap_or(false);
+
+        if has_old_table {
+            conn.execute_batch("DROP TABLE IF EXISTS _duckbake_embeddings")?;
+        }
+
         conn.execute_batch(
             r#"
             CREATE TABLE IF NOT EXISTS _duckbake_embeddings (
-                id INTEGER PRIMARY KEY,
                 table_name VARCHAR NOT NULL,
                 source_column VARCHAR NOT NULL,
                 row_id INTEGER NOT NULL,
                 content TEXT NOT NULL,
                 embedding FLOAT[] NOT NULL,
                 embedding_model VARCHAR NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (table_name, source_column, row_id)
             );
             CREATE INDEX IF NOT EXISTS idx_embeddings_table
                 ON _duckbake_embeddings(table_name, source_column);
@@ -279,31 +292,36 @@ impl DuckDbService {
         rows: Vec<(i64, String, Vec<f32>)>, // (row_id, content, embedding)
         model: &str,
     ) -> Result<()> {
-        self.init_embeddings_table(conn)?;
+        if rows.is_empty() {
+            return Ok(());
+        }
 
-        let mut stmt = conn.prepare(
-            r#"
-            INSERT INTO _duckbake_embeddings
-                (table_name, source_column, row_id, content, embedding, embedding_model)
-            VALUES (?, ?, ?, ?, ?, ?)
-            "#,
-        )?;
+        // Build a single INSERT with multiple VALUES for better performance
+        let mut values: Vec<String> = Vec::with_capacity(rows.len());
 
         for (row_id, content, embedding) in rows {
-            // Convert Vec<f32> to a format DuckDB can handle
+            // Convert Vec<f32> to DuckDB array format
             let embedding_str = format!(
                 "[{}]",
                 embedding.iter().map(|f| f.to_string()).collect::<Vec<_>>().join(",")
             );
-            stmt.execute(duckdb::params![
-                table_name,
-                column_name,
-                row_id,
-                content,
-                embedding_str,
-                model
-            ])?;
+
+            // Escape content for SQL
+            let escaped_content = content.replace('\'', "''");
+
+            values.push(format!(
+                "('{}', '{}', {}, '{}', {}::FLOAT[], '{}')",
+                table_name, column_name, row_id, escaped_content, embedding_str, model
+            ));
         }
+
+        // Execute as a single batched insert
+        let sql = format!(
+            "INSERT INTO _duckbake_embeddings (table_name, source_column, row_id, content, embedding, embedding_model) VALUES {}",
+            values.join(",")
+        );
+
+        conn.execute_batch(&sql)?;
 
         Ok(())
     }
@@ -339,6 +357,19 @@ impl DuckDbService {
 
     /// Remove vectorization for a table
     pub fn remove_vectorization(&self, conn: &Connection, table_name: &str) -> Result<()> {
+        // Check if table exists first
+        let exists: bool = conn
+            .query_row(
+                "SELECT COUNT(*) > 0 FROM information_schema.tables WHERE table_name = '_duckbake_embeddings'",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap_or(false);
+
+        if !exists {
+            return Ok(());
+        }
+
         conn.execute(
             "DELETE FROM _duckbake_embeddings WHERE table_name = ?",
             [table_name],

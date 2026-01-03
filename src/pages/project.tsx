@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { listen } from "@tauri-apps/api/event";
 import {
 	Database,
 	Table,
@@ -13,6 +14,8 @@ import {
 	ChevronDown,
 	Home,
 	Pencil,
+	Loader2,
+	Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,7 +48,8 @@ import {
 	listProjects,
 	updateProject,
 } from "@/lib/tauri";
-import { useProjectStore, useAppStore } from "@/stores";
+import { useProjectStore, useAppStore, useVectorizationStore } from "@/stores";
+import type { VectorizationProgress } from "@/types";
 import { useThemeStore } from "@/stores/theme-store";
 
 export function ProjectPage() {
@@ -55,11 +59,30 @@ export function ProjectPage() {
 	const { activeTab, setActiveTab, sidebarOpen } = useAppStore();
 	const { setCurrentProject, selectedTable, selectTable } = useProjectStore();
 	const { mode } = useThemeStore();
+	const { setProgress, isVectorizing } = useVectorizationStore();
 	const isDark =
 		mode === "dark" ||
 		(mode === "system" &&
 			window.matchMedia("(prefers-color-scheme: dark)").matches);
 	const [importDialogOpen, setImportDialogOpen] = useState(false);
+
+	// Listen for vectorization progress events globally
+	useEffect(() => {
+		const unsubscribe = listen<VectorizationProgress>(
+			"vectorization-progress",
+			(event) => {
+				setProgress(event.payload.tableName, event.payload);
+				// Refresh tables when vectorization completes
+				if (event.payload.status === "completed") {
+					queryClient.invalidateQueries({ queryKey: ["tables", id] });
+				}
+			}
+		);
+
+		return () => {
+			unsubscribe.then((fn) => fn());
+		};
+	}, [id, setProgress, queryClient]);
 	const [vectorizeTable, setVectorizeTable] = useState<string | null>(null);
 	const [settingsOpen, setSettingsOpen] = useState(false);
 	const [renameDialogOpen, setRenameDialogOpen] = useState(false);
@@ -283,28 +306,37 @@ export function ProjectPage() {
 										</div>
 									) : (
 										<div className="space-y-1">
-											{tables.map((table) => (
-												<div
-													key={table.name}
-													className={`w-full text-left px-3 py-2 rounded-md text-sm flex items-center gap-2 transition-colors cursor-pointer ${
-														selectedTable === table.name
-															? "bg-muted text-foreground"
-															: "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-													}`}
-													onClick={() => {
-														selectTable(table.name);
-														setActiveTab("browser");
-													}}
-												>
-													<Table className="h-4 w-4 shrink-0" />
-													<span className="truncate flex-1 min-w-0">
-														{table.name}
-													</span>
-													<span className="text-xs opacity-60 shrink-0">
-														{table.rowCount.toLocaleString()}
-													</span>
-												</div>
-											))}
+											{tables.map((table) => {
+												const vectorizing = isVectorizing(table.name);
+												return (
+													<div
+														key={table.name}
+														className={`w-full text-left px-3 py-2 rounded-md text-sm flex items-center gap-2 transition-colors cursor-pointer ${
+															selectedTable === table.name
+																? "bg-muted text-foreground"
+																: "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+														}`}
+														onClick={() => {
+															selectTable(table.name);
+															setActiveTab("browser");
+														}}
+													>
+														<Table className="h-4 w-4 shrink-0" />
+														<span className="truncate flex-1 min-w-0">
+															{table.name}
+														</span>
+														{vectorizing ? (
+															<Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-primary" />
+														) : table.isVectorized ? (
+															<Sparkles className="h-3.5 w-3.5 shrink-0 text-primary" />
+														) : (
+															<span className="text-xs opacity-60 shrink-0">
+																{table.rowCount.toLocaleString()}
+															</span>
+														)}
+													</div>
+												);
+											})}
 											<div className="pt-4">
 												<DropZone projectId={id!} />
 											</div>
