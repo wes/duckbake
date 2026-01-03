@@ -100,103 +100,119 @@
 }
 
 /* ========================================
-   GLASS THEME STYLE (Default)
+   GLASS THEME STYLE (Default) - macOS Finder Native
    ======================================== */
 .theme-glass {
-  --background: oklch(0.98 0 0);
-  --foreground: oklch(0.15 0 0);
-  --card: oklch(1.0 0 0);
-  --card-foreground: oklch(0.15 0 0);
-  --popover: oklch(1.0 0 0);
-  --popover-foreground: oklch(0.15 0 0);
-  --primary: oklch(0.55 0.15 280);
-  --primary-foreground: oklch(0.98 0 0);
-  --secondary: oklch(0.95 0 0);
-  --secondary-foreground: oklch(0.2 0 0);
-  --muted: oklch(0.95 0 0);
-  --muted-foreground: oklch(0.45 0 0);
-  --accent: oklch(0.95 0.02 280);
-  --accent-foreground: oklch(0.2 0 0);
-  --destructive: oklch(0.55 0.25 25);
-  --destructive-foreground: oklch(0.98 0 0);
-  --border: oklch(0.9 0 0);
-  --input: oklch(0.9 0 0);
-  --ring: oklch(0.55 0.15 280);
-  --chart-1: oklch(0.6 0.15 280);
-  --chart-2: oklch(0.55 0.12 320);
-  --chart-3: oklch(0.5 0.1 200);
-  --chart-4: oklch(0.6 0.08 160);
-  --chart-5: oklch(0.65 0.1 60);
-  --sidebar: oklch(0.97 0 0);
-  --sidebar-foreground: oklch(0.15 0 0);
-  --sidebar-primary: oklch(0.2 0 0);
-  --sidebar-primary-foreground: oklch(0.98 0 0);
-  --sidebar-accent: oklch(0.95 0 0);
-  --sidebar-accent-foreground: oklch(0.2 0 0);
-  --sidebar-border: oklch(0.9 0 0);
-  --sidebar-ring: oklch(0.7 0 0);
+  /* macOS-style neutral grays */
+  --background: oklch(0.97 0 0);
+  --foreground: oklch(0.13 0 0);
+  --card: oklch(1.0 0 0 / 0.8);
+  --card-foreground: oklch(0.13 0 0);
+  --popover: oklch(0.99 0 0 / 0.95);
+  --popover-foreground: oklch(0.13 0 0);
+  /* macOS system blue (#007AFF) */
+  --primary: oklch(0.59 0.24 255);
+  --primary-foreground: oklch(1.0 0 0);
+  --secondary: oklch(0.96 0 0);
+  --secondary-foreground: oklch(0.25 0 0);
+  --muted: oklch(0.94 0 0);
+  --muted-foreground: oklch(0.5 0 0);
+  --accent: oklch(0.96 0 0);
+  --accent-foreground: oklch(0.25 0 0);
+  /* macOS system red */
+  --destructive: oklch(0.59 0.24 27);
+  --destructive-foreground: oklch(1.0 0 0);
+  --border: oklch(0 0 0 / 0.1);
+  --input: oklch(0.93 0 0);
+  --ring: oklch(0.59 0.24 255);
+  /* macOS-style chart colors */
+  --chart-1: oklch(0.59 0.24 255);
+  --chart-2: oklch(0.65 0.2 160);
+  --chart-3: oklch(0.7 0.18 45);
+  --chart-4: oklch(0.6 0.22 320);
+  --chart-5: oklch(0.55 0.2 30);
+  /* Finder-style translucent sidebar */
+  --sidebar: oklch(0.96 0 0 / 0.8);
+  --sidebar-foreground: oklch(0.25 0 0);
+  --sidebar-primary: oklch(0.59 0.24 255);
+  --sidebar-primary-foreground: oklch(1.0 0 0);
+  --sidebar-accent: oklch(0.59 0.24 255 / 0.12);
+  --sidebar-accent-foreground: oklch(0.13 0 0);
+  --sidebar-border: oklch(0 0 0 / 0.08);
+  --sidebar-ring: oklch(0.59 0.24 255);
+  /* macOS system fonts */
   --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif;
   --font-serif: "New York", "Iowan Old Style", Georgia, serif;
   --font-mono: "SF Mono", Menlo, Monaco, "Cascadia Code", monospace;
-  --radius: 0.75rem;
-  --shadow-2xs: 0 1px 2px oklch(0 0 0 / 0.04);
-  --shadow-xs: 0 1px 3px oklch(0 0 0 / 0.06);
-  --shadow-sm: 0 2px 8px oklch(0 0 0 / 0.06), 0 1px 2px oklch(0 0 0 / 0.04);
-  --shadow: 0 4px 16px oklch(0 0 0 / 0.08), 0 2px 4px oklch(0 0 0 / 0.04);
-  --shadow-md: 0 6px 20px oklch(0 0 0 / 0.1), 0 3px 6px oklch(0 0 0 / 0.05);
-  --shadow-lg: 0 10px 32px oklch(0 0 0 / 0.12), 0 4px 8px oklch(0 0 0 / 0.06);
-  --shadow-xl: 0 16px 48px oklch(0 0 0 / 0.15), 0 8px 16px oklch(0 0 0 / 0.08);
-  --shadow-2xl: 0 24px 64px oklch(0 0 0 / 0.2);
-  --glass-blur: 20px;
-  --glass-bg: oklch(1 0 0 / 0.7);
-  --glass-border: oklch(1 0 0 / 0.2);
-  --glass-highlight: oklch(1 0 0 / 0.3);
+  /* macOS uses ~10px radius for most elements */
+  --radius: 0.625rem;
+  /* Subtle macOS-style shadows */
+  --shadow-2xs: 0 0.5px 1px oklch(0 0 0 / 0.04);
+  --shadow-xs: 0 1px 2px oklch(0 0 0 / 0.05);
+  --shadow-sm: 0 1px 3px oklch(0 0 0 / 0.08), 0 1px 2px oklch(0 0 0 / 0.04);
+  --shadow: 0 2px 8px oklch(0 0 0 / 0.08), 0 1px 3px oklch(0 0 0 / 0.06);
+  --shadow-md: 0 4px 12px oklch(0 0 0 / 0.1), 0 2px 4px oklch(0 0 0 / 0.05);
+  --shadow-lg: 0 8px 24px oklch(0 0 0 / 0.12), 0 4px 8px oklch(0 0 0 / 0.06);
+  --shadow-xl: 0 16px 40px oklch(0 0 0 / 0.14), 0 6px 12px oklch(0 0 0 / 0.08);
+  --shadow-2xl: 0 24px 48px oklch(0 0 0 / 0.18);
+  /* macOS vibrancy-style glass */
+  --glass-blur: 40px;
+  --glass-bg: oklch(1 0 0 / 0.72);
+  --glass-border: oklch(0 0 0 / 0.06);
+  --glass-highlight: oklch(1 0 0 / 0.5);
 }
 
 .theme-glass.dark {
-  --background: oklch(0.12 0.005 280);
-  --foreground: oklch(0.95 0 0);
-  --card: oklch(0.16 0.008 280);
-  --card-foreground: oklch(0.95 0 0);
-  --popover: oklch(0.14 0.008 280);
-  --popover-foreground: oklch(0.95 0 0);
-  --primary: oklch(0.7 0.15 280);
-  --primary-foreground: oklch(0.98 0 0);
-  --secondary: oklch(0.22 0.01 280);
-  --secondary-foreground: oklch(0.95 0 0);
-  --muted: oklch(0.22 0.008 280);
-  --muted-foreground: oklch(0.6 0 0);
-  --accent: oklch(0.25 0.015 280);
-  --accent-foreground: oklch(0.95 0 0);
-  --destructive: oklch(0.6 0.2 25);
-  --destructive-foreground: oklch(0.98 0 0);
-  --border: oklch(0.28 0.015 280);
-  --input: oklch(0.22 0.01 280);
-  --ring: oklch(0.7 0.15 280);
-  --chart-1: oklch(0.7 0.15 280);
-  --chart-2: oklch(0.65 0.12 320);
-  --chart-3: oklch(0.6 0.1 200);
-  --chart-4: oklch(0.7 0.08 160);
-  --chart-5: oklch(0.75 0.1 60);
-  --sidebar: oklch(0.1 0.005 280);
-  --sidebar-foreground: oklch(0.95 0 0);
-  --sidebar-primary: oklch(0.95 0 0);
-  --sidebar-primary-foreground: oklch(0.15 0 0);
-  --sidebar-accent: oklch(0.2 0.01 280);
-  --sidebar-accent-foreground: oklch(0.95 0 0);
-  --sidebar-border: oklch(0.25 0.01 280);
-  --sidebar-ring: oklch(0.7 0.15 280);
-  --shadow-2xs: 0 1px 2px oklch(0 0 0 / 0.2);
-  --shadow-xs: 0 1px 3px oklch(0 0 0 / 0.25);
-  --shadow-sm: 0 2px 8px oklch(0 0 0 / 0.25), 0 1px 2px oklch(0 0 0 / 0.15);
-  --shadow: 0 4px 16px oklch(0 0 0 / 0.3), 0 2px 4px oklch(0 0 0 / 0.15);
-  --shadow-md: 0 6px 20px oklch(0 0 0 / 0.35), 0 3px 6px oklch(0 0 0 / 0.2);
-  --shadow-lg: 0 10px 32px oklch(0 0 0 / 0.4), 0 4px 8px oklch(0 0 0 / 0.2);
-  --shadow-xl: 0 16px 48px oklch(0 0 0 / 0.45), 0 8px 16px oklch(0 0 0 / 0.25);
-  --shadow-2xl: 0 24px 64px oklch(0 0 0 / 0.5);
-  --glass-bg: oklch(0.18 0.01 280 / 0.6);
+  /* macOS dark mode neutral grays */
+  --background: oklch(0.16 0 0);
+  --foreground: oklch(0.93 0 0);
+  --card: oklch(0.22 0 0 / 0.7);
+  --card-foreground: oklch(0.93 0 0);
+  --popover: oklch(0.24 0 0 / 0.92);
+  --popover-foreground: oklch(0.93 0 0);
+  /* macOS system blue (slightly brighter for dark mode) */
+  --primary: oklch(0.65 0.24 255);
+  --primary-foreground: oklch(1.0 0 0);
+  --secondary: oklch(0.26 0 0);
+  --secondary-foreground: oklch(0.93 0 0);
+  --muted: oklch(0.24 0 0);
+  --muted-foreground: oklch(0.58 0 0);
+  --accent: oklch(0.26 0 0);
+  --accent-foreground: oklch(0.93 0 0);
+  /* macOS system red */
+  --destructive: oklch(0.62 0.24 27);
+  --destructive-foreground: oklch(1.0 0 0);
+  --border: oklch(1 0 0 / 0.1);
+  --input: oklch(0.22 0 0);
+  --ring: oklch(0.65 0.24 255);
+  /* macOS-style chart colors (brighter for dark mode) */
+  --chart-1: oklch(0.65 0.24 255);
+  --chart-2: oklch(0.7 0.2 160);
+  --chart-3: oklch(0.75 0.18 45);
+  --chart-4: oklch(0.65 0.22 320);
+  --chart-5: oklch(0.6 0.2 30);
+  /* Finder-style translucent sidebar (dark) */
+  --sidebar: oklch(0.14 0 0 / 0.75);
+  --sidebar-foreground: oklch(0.85 0 0);
+  --sidebar-primary: oklch(0.65 0.24 255);
+  --sidebar-primary-foreground: oklch(1.0 0 0);
+  --sidebar-accent: oklch(0.65 0.24 255 / 0.2);
+  --sidebar-accent-foreground: oklch(0.93 0 0);
+  --sidebar-border: oklch(1 0 0 / 0.08);
+  --sidebar-ring: oklch(0.65 0.24 255);
+  /* macOS dark mode shadows */
+  --shadow-2xs: 0 0.5px 1px oklch(0 0 0 / 0.2);
+  --shadow-xs: 0 1px 2px oklch(0 0 0 / 0.25);
+  --shadow-sm: 0 1px 3px oklch(0 0 0 / 0.3), 0 1px 2px oklch(0 0 0 / 0.2);
+  --shadow: 0 2px 8px oklch(0 0 0 / 0.35), 0 1px 3px oklch(0 0 0 / 0.25);
+  --shadow-md: 0 4px 12px oklch(0 0 0 / 0.4), 0 2px 4px oklch(0 0 0 / 0.25);
+  --shadow-lg: 0 8px 24px oklch(0 0 0 / 0.45), 0 4px 8px oklch(0 0 0 / 0.3);
+  --shadow-xl: 0 16px 40px oklch(0 0 0 / 0.5), 0 6px 12px oklch(0 0 0 / 0.35);
+  --shadow-2xl: 0 24px 48px oklch(0 0 0 / 0.6);
+  /* macOS vibrancy-style glass (dark mode) */
+  --glass-bg: oklch(0.18 0 0 / 0.65);
   --glass-border: oklch(1 0 0 / 0.08);
-  --glass-highlight: oklch(1 0 0 / 0.1);
+  --glass-highlight: oklch(1 0 0 / 0.06);
 }
 
 /* ========================================
@@ -652,11 +668,11 @@ body {
 }
 
 /* ========================================
-   CUSTOM SCROLLBARS
+   CUSTOM SCROLLBARS - macOS Native Style
    ======================================== */
 * {
   scrollbar-width: thin;
-  scrollbar-color: var(--muted-foreground) transparent;
+  scrollbar-color: oklch(0.5 0 0 / 0.3) transparent;
 }
 
 *::-webkit-scrollbar {
@@ -669,75 +685,64 @@ body {
 }
 
 *::-webkit-scrollbar-thumb {
-  background-color: var(--muted-foreground);
-  border-radius: 4px;
+  background-color: oklch(0.5 0 0 / 0.35);
+  border-radius: 100px;
+  border: 2px solid transparent;
+  background-clip: content-box;
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background-color: var(--foreground);
+  background-color: oklch(0.5 0 0 / 0.5);
 }
 
 *::-webkit-scrollbar-corner {
   background: transparent;
 }
 
+/* Dark mode scrollbars */
+.dark *::-webkit-scrollbar-thumb {
+  background-color: oklch(0.7 0 0 / 0.3);
+}
+
+.dark *::-webkit-scrollbar-thumb:hover {
+  background-color: oklch(0.7 0 0 / 0.5);
+}
+
 /* ========================================
-   GLASS EFFECT UTILITIES
+   GLASS EFFECT UTILITIES - macOS Vibrancy Style
    ======================================== */
 .glass {
   background: var(--glass-bg);
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-  border: 1px solid var(--glass-border);
-  box-shadow: inset 0 1px 0 0 var(--glass-highlight), var(--shadow);
+  backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  border: 0.5px solid var(--glass-border);
+  box-shadow: var(--shadow-sm);
 }
 
+/* macOS Finder-style glass cards - clean vibrancy effect */
 .theme-glass .glass-card {
-  background: linear-gradient(
-    135deg,
-    oklch(0.2 0.015 280 / 0.7) 0%,
-    oklch(0.15 0.01 280 / 0.5) 100%
-  );
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid var(--glass-border);
-  box-shadow:
-    inset 0 1px 0 0 var(--glass-highlight),
-    inset 0 -1px 0 0 oklch(0 0 0 / 0.1),
-    var(--shadow-lg);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(190%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(190%);
+  border: 0.5px solid var(--glass-border);
+  box-shadow: var(--shadow);
+  transition: all 0.15s ease;
 }
 
 .theme-glass .glass-card:hover {
-  background: linear-gradient(
-    135deg,
-    oklch(0.22 0.02 280 / 0.75) 0%,
-    oklch(0.17 0.015 280 / 0.55) 100%
-  );
-  border-color: oklch(1 0 0 / 0.15);
-  box-shadow:
-    inset 0 1px 0 0 oklch(1 0 0 / 0.15),
-    inset 0 -1px 0 0 oklch(0 0 0 / 0.1),
-    0 12px 40px oklch(0.5 0.1 280 / 0.2),
-    0 4px 12px oklch(0 0 0 / 0.2);
-  transform: translateY(-2px);
+  background: oklch(0.22 0 0 / 0.72);
+  box-shadow: var(--shadow-md);
 }
 
-/* Light mode glass cards */
+/* Light mode glass cards - cleaner macOS vibrancy */
 .theme-glass:not(.dark) .glass-card {
-  background: linear-gradient(
-    135deg,
-    oklch(1 0 0 / 0.85) 0%,
-    oklch(0.98 0.005 280 / 0.7) 100%
-  );
+  background: oklch(1 0 0 / 0.78);
+  border: 0.5px solid oklch(0 0 0 / 0.08);
 }
 
 .theme-glass:not(.dark) .glass-card:hover {
-  background: linear-gradient(
-    135deg,
-    oklch(1 0 0 / 0.9) 0%,
-    oklch(0.98 0.008 280 / 0.75) 100%
-  );
+  background: oklch(1 0 0 / 0.85);
+  box-shadow: var(--shadow-md);
 }
 
 /* Mono theme cards - no glass effect */
@@ -757,33 +762,41 @@ body {
 }
 
 /* ========================================
-   GLASS BUTTON UTILITIES
+   GLASS BUTTON UTILITIES - macOS Native Style
    ======================================== */
 .theme-glass .glass-button {
+  /* macOS system blue with subtle gradient */
   background: linear-gradient(
-    135deg,
-    oklch(0.7 0.15 280 / 0.9) 0%,
-    oklch(0.6 0.12 300 / 0.85) 100%
+    180deg,
+    oklch(0.62 0.22 255) 0%,
+    oklch(0.56 0.24 255) 100%
   );
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid oklch(1 0 0 / 0.2);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: none;
   box-shadow:
-    inset 0 1px 0 0 oklch(1 0 0 / 0.25),
-    0 4px 16px oklch(0.5 0.15 280 / 0.3);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    0 0.5px 0 0 oklch(0 0 0 / 0.15),
+    0 1px 2px oklch(0 0 0 / 0.1);
+  transition: all 0.1s ease;
 }
 
 .theme-glass .glass-button:hover {
   background: linear-gradient(
-    135deg,
-    oklch(0.75 0.17 280 / 0.95) 0%,
-    oklch(0.65 0.14 300 / 0.9) 100%
+    180deg,
+    oklch(0.65 0.22 255) 0%,
+    oklch(0.59 0.24 255) 100%
   );
   box-shadow:
-    inset 0 1px 0 0 oklch(1 0 0 / 0.3),
-    0 6px 24px oklch(0.5 0.15 280 / 0.4);
-  transform: translateY(-1px);
+    0 0.5px 0 0 oklch(0 0 0 / 0.15),
+    0 2px 4px oklch(0 0 0 / 0.15);
+}
+
+.theme-glass .glass-button:active {
+  background: linear-gradient(
+    180deg,
+    oklch(0.52 0.22 255) 0%,
+    oklch(0.48 0.24 255) 100%
+  );
 }
 
 .theme-mono .glass-button {
@@ -801,24 +814,15 @@ body {
 }
 
 /* ========================================
-   MESH GRADIENT BACKGROUND
+   MESH GRADIENT BACKGROUND - macOS Native Style
    ======================================== */
+/* macOS uses subtle, clean backgrounds - no colorful mesh gradients */
 .theme-glass .mesh-gradient {
-  background:
-    radial-gradient(ellipse at 20% 20%, oklch(0.4 0.12 280 / 0.3) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 30%, oklch(0.35 0.1 320 / 0.25) 0%, transparent 45%),
-    radial-gradient(ellipse at 40% 80%, oklch(0.3 0.08 200 / 0.2) 0%, transparent 50%),
-    radial-gradient(ellipse at 90% 90%, oklch(0.25 0.06 280 / 0.15) 0%, transparent 40%),
-    var(--background);
+  background: var(--background);
 }
 
 .theme-glass:not(.dark) .mesh-gradient {
-  background:
-    radial-gradient(ellipse at 20% 20%, oklch(0.8 0.08 280 / 0.15) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 30%, oklch(0.75 0.06 320 / 0.12) 0%, transparent 45%),
-    radial-gradient(ellipse at 40% 80%, oklch(0.7 0.05 200 / 0.1) 0%, transparent 50%),
-    radial-gradient(ellipse at 90% 90%, oklch(0.65 0.04 280 / 0.08) 0%, transparent 40%),
-    var(--background);
+  background: var(--background);
 }
 
 .theme-mono .mesh-gradient {

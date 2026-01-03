@@ -75,7 +75,11 @@ function NavBar() {
 					</a>
 				</div>
 				<Button asChild>
-					<a href="https://github.com/wes/duckbake/releases/latest/download/DuckBake-macOS.dmg">
+					<a
+						href="https://github.com/wes/duckbake/releases/latest/download/DuckBake-macOS.dmg"
+						data-umami-event="Download"
+						data-umami-event-location="navbar"
+					>
 						<Apple className="w-4 h-4" />
 						Download for Mac
 					</a>
@@ -155,7 +159,11 @@ function Hero() {
 
 					<div className="hero-animate opacity-0 flex flex-col sm:flex-row gap-4 justify-center mb-16">
 						<Button size="lg" asChild>
-							<a href="https://github.com/wes/duckbake/releases/latest/download/DuckBake-macOS.dmg">
+							<a
+								href="https://github.com/wes/duckbake/releases/latest/download/DuckBake-macOS.dmg"
+								data-umami-event="Download"
+								data-umami-event-location="hero"
+							>
 								<Apple className="w-4 h-4" />
 								Download for Mac
 							</a>
@@ -604,7 +612,11 @@ function Download() {
 
 				<div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
 					<Button size="lg" asChild className="download-btn opacity-0">
-						<a href="https://github.com/wes/duckbake/releases/latest/download/DuckBake-macOS.dmg">
+						<a
+							href="https://github.com/wes/duckbake/releases/latest/download/DuckBake-macOS.dmg"
+							data-umami-event="Download"
+							data-umami-event-location="download-section"
+						>
 							<Apple className="w-4 h-4 mr-2" />
 							Download for macOS
 						</a>

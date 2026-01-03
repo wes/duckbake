@@ -116,10 +116,11 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
 
 function ThemePreview({ themeId }: { themeId: ThemeStyle }) {
 	if (themeId === "glass") {
+		// macOS Finder-style preview with neutral grays and system blue accent
 		return (
-			<div className="w-full h-12 rounded-md bg-gradient-to-br from-purple-500/20 via-blue-500/10 to-pink-500/20 border border-white/10 flex items-center justify-center overflow-hidden">
-				<div className="w-6 h-4 rounded bg-white/20 backdrop-blur-sm border border-white/20" />
-				<div className="w-6 h-4 rounded bg-white/15 backdrop-blur-sm border border-white/15 -ml-1.5 mt-1.5" />
+			<div className="w-full h-12 rounded-[10px] bg-[#f5f5f7] border border-black/8 flex items-center justify-center gap-1.5 overflow-hidden">
+				<div className="w-6 h-4 rounded-[6px] bg-white/80 border border-black/6 shadow-sm" />
+				<div className="w-6 h-4 rounded-[6px] bg-[#007AFF]" />
 			</div>
 		);
 	}
