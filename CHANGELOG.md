@@ -2,6 +2,11 @@
 
 All notable changes to DuckBake will be documented in this file.
 
+## [0.0.32] - 2026-01-03
+
+### Bug Fixes
+
+- Fixing vectorizing and improving vectorizing to run in the background and let the app be used while vectorizing is happening
 ## [0.0.31] - 2026-01-03
 
 ### Changes
