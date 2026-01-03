@@ -1,6 +1,6 @@
 [package]
 name = "duckbake"
-version = "0.0.33"
+version = "0.0.34"
 description = "DuckDB-powered data analysis with AI"
 authors = ["you"]
 edition = "2021"
