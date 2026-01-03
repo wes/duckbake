@@ -2,6 +2,16 @@
 
 All notable changes to DuckBake will be documented in this file.
 
+## [0.0.33] - 2026-01-03
+
+### Changes
+
+- Bump og-image
+- Website tracking
+
+### Styling
+
+- Styles clean up and adding error boundary
 ## [0.0.32] - 2026-01-03
 
 ### Bug Fixes
