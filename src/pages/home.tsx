@@ -2,14 +2,8 @@ import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import {
-	Plus,
-	Database,
-	Trash2,
-	Moon,
-	Sun,
-	Pencil,
-} from "lucide-react";
+import { openUrl } from "@tauri-apps/plugin-opener";
+import { Plus, Database, Trash2, Moon, Sun, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -171,9 +165,12 @@ export function HomePage() {
 			>
 				<h1 className="text-md font-medium text-foreground/90">Projects</h1>
 				<div className="flex items-center gap-3">
-					<span className="text-[10px] font-mono text-muted-foreground/70">
+					<button
+						onClick={() => openUrl("https://github.com/wes/duckbake/releases")}
+						className="text-[10px] font-mono text-muted-foreground/70 hover:text-foreground transition-colors cursor-pointer"
+					>
 						v{__APP_VERSION__}
-					</span>
+					</button>
 					<Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
 						<DialogTrigger asChild>
 							<Button variant="ghost" className="h-8 px-3 text-sm">
@@ -203,10 +200,7 @@ export function HomePage() {
 								/>
 							</div>
 							<DialogFooter>
-								<Button
-									variant="outline"
-									onClick={() => setDialogOpen(false)}
-								>
+								<Button variant="outline" onClick={() => setDialogOpen(false)}>
 									Cancel
 								</Button>
 								<Button
@@ -263,66 +257,78 @@ export function HomePage() {
 						</Button>
 					</div>
 				) : (
-					<div>
-						{/* Table header */}
-						<div className="flex items-center px-4 py-1.5 border-b text-sm text-muted-foreground font-medium sticky top-0">
-							<div className="flex-1">Name</div>
-							<div className="w-16 text-right">Tables</div>
-							<div className="w-16 text-right">Rows</div>
-							<div className="w-16 text-right">Chats</div>
-							<div className="w-16 text-right">Queries</div>
-							<div className="w-24 text-right">Modified</div>
-							<div className="w-16"></div>
+					<div className="p-3">
+						<div className="overflow-hidden">
+							<table>
+								<thead className="sticky top-0 z-10">
+									<tr>
+										<th>Name</th>
+										<th className="w-16 text-right">Tables</th>
+										<th className="w-16 text-right">Rows</th>
+										<th className="w-16 text-right">Chats</th>
+										<th className="w-20 text-right">Queries</th>
+										<th className="w-24 text-right">Modified</th>
+										<th className="w-16"></th>
+									</tr>
+								</thead>
+								<tbody>
+									{projects.map((project) => {
+										const stats = statsMap.get(project.id);
+										return (
+											<tr
+												key={project.id}
+												className="cursor-pointer group"
+												onClick={() => navigate(`/project/${project.id}`)}
+											>
+												<td>
+													<div className="flex items-center gap-2.5">
+														<Database className="h-4 w-4 opacity-50 shrink-0" />
+														<span className="truncate font-medium">
+															{project.name}
+														</span>
+													</div>
+												</td>
+												<td className="text-right text-muted-foreground tabular-nums">
+													{stats ? formatNumber(stats.tableCount) : "-"}
+												</td>
+												<td className="text-right text-muted-foreground tabular-nums">
+													{stats ? formatNumber(stats.totalRows) : "-"}
+												</td>
+												<td className="text-right text-muted-foreground tabular-nums">
+													{stats ? formatNumber(stats.conversationCount) : "-"}
+												</td>
+												<td className="text-right text-muted-foreground tabular-nums">
+													{stats ? formatNumber(stats.savedQueryCount) : "-"}
+												</td>
+												<td className="text-right text-muted-foreground">
+													{new Date(project.updatedAt).toLocaleDateString()}
+												</td>
+												<td>
+													<div className="flex justify-end gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+														<Button
+															variant="ghost"
+															size="icon"
+															className="h-6 w-6"
+															onClick={(e) => handleEdit(e, project)}
+														>
+															<Pencil className="h-3 w-3" />
+														</Button>
+														<Button
+															variant="ghost"
+															size="icon"
+															className="h-6 w-6 text-destructive hover:text-destructive hover:bg-destructive/10"
+															onClick={(e) => handleDelete(e, project.id)}
+														>
+															<Trash2 className="h-3 w-3" />
+														</Button>
+													</div>
+												</td>
+											</tr>
+										);
+									})}
+								</tbody>
+							</table>
 						</div>
-						{/* Table rows */}
-						{projects.map((project) => {
-							const stats = statsMap.get(project.id);
-							return (
-								<div
-									key={project.id}
-									className="flex items-center px-4 py-1.5 border-b hover:bg-muted/50 cursor-pointer group transition-colors"
-									onClick={() => navigate(`/project/${project.id}`)}
-								>
-									<div className="flex-1 flex items-center gap-2 min-w-0">
-										<Database className="h-4 w-4 text-primary shrink-0" />
-										<span className="text-sm truncate">{project.name}</span>
-									</div>
-									<div className="w-16 text-right text-sm text-muted-foreground tabular-nums">
-										{stats ? formatNumber(stats.tableCount) : "-"}
-									</div>
-									<div className="w-16 text-right text-sm text-muted-foreground tabular-nums">
-										{stats ? formatNumber(stats.totalRows) : "-"}
-									</div>
-									<div className="w-16 text-right text-sm text-muted-foreground tabular-nums">
-										{stats ? formatNumber(stats.conversationCount) : "-"}
-									</div>
-									<div className="w-16 text-right text-sm text-muted-foreground tabular-nums">
-										{stats ? formatNumber(stats.savedQueryCount) : "-"}
-									</div>
-									<div className="w-24 text-right text-sm text-muted-foreground">
-										{new Date(project.updatedAt).toLocaleDateString()}
-									</div>
-									<div className="w-16 flex justify-end gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-										<Button
-											variant="ghost"
-											size="icon"
-											className="h-6 w-6"
-											onClick={(e) => handleEdit(e, project)}
-										>
-											<Pencil className="h-3 w-3" />
-										</Button>
-										<Button
-											variant="ghost"
-											size="icon"
-											className="h-6 w-6 text-destructive hover:text-destructive hover:bg-destructive/10"
-											onClick={(e) => handleDelete(e, project.id)}
-										>
-											<Trash2 className="h-3 w-3" />
-										</Button>
-									</div>
-								</div>
-							);
-						})}
 					</div>
 				)}
 			</div>

@@ -147,7 +147,7 @@ export function TableViewer({ projectId, tableName, isVectorized, onVectorize }:
       </div>
 
       {/* Data Grid */}
-      <div className="flex-1 overflow-hidden p-3">
+      <div className="flex-1 overflow-hidden">
         <DataGrid
           columns={columns}
           rows={rows}

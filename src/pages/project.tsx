@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { listen } from "@tauri-apps/api/event";
+import { openUrl } from "@tauri-apps/plugin-opener";
 import {
 	Database,
 	Table,
@@ -41,6 +42,7 @@ import { TableViewer, VectorizationDialog } from "@/components/database";
 import { SqlEditor } from "@/components/query";
 import { ChatPanel } from "@/components/chat";
 import { SettingsDialog } from "@/components/settings";
+import { ErrorBoundary } from "@/components/ui/error-boundary";
 import {
 	openProject,
 	getTables,
@@ -76,7 +78,7 @@ export function ProjectPage() {
 				if (event.payload.status === "completed") {
 					queryClient.invalidateQueries({ queryKey: ["tables", id] });
 				}
-			}
+			},
 		);
 
 		return () => {
@@ -263,9 +265,12 @@ export function ProjectPage() {
 					</TabsList>
 				</div>
 				<div className="flex items-center gap-2" onMouseDown={handleDrag}>
-					<span className="text-[10px] font-mono text-muted-foreground/70">
+					<button
+						onClick={() => openUrl("https://github.com/wes/duckbake/releases")}
+						className="text-[10px] font-mono text-muted-foreground/70 hover:text-foreground transition-colors cursor-pointer"
+					>
 						v{__APP_VERSION__}
-					</span>
+					</button>
 					<Button
 						variant="ghost"
 						size="icon"
@@ -305,13 +310,14 @@ export function ProjectPage() {
 											<DropZone projectId={id!} />
 										</div>
 									) : (
-										<div className="space-y-1">
+										<div className="space-y-0">
 											{tables.map((table) => {
 												const vectorizing = isVectorizing(table.name);
 												return (
-													<div
+													<button
+														type="button"
 														key={table.name}
-														className={`w-full text-left px-3 py-2 rounded-md text-sm flex items-center gap-2 transition-colors cursor-pointer ${
+														className={`w-full text-left px-3 py-1 rounded-md text-md flex items-center gap-2 transition-colors cursor-pointer ${
 															selectedTable === table.name
 																? "bg-muted text-foreground"
 																: "text-muted-foreground hover:text-foreground hover:bg-muted/50"
@@ -322,7 +328,7 @@ export function ProjectPage() {
 														}}
 													>
 														<Table className="h-4 w-4 shrink-0" />
-														<span className="truncate flex-1 min-w-0">
+														<span className="truncate flex-1 min-w-0 font-semibold">
 															{table.name}
 														</span>
 														{vectorizing ? (
@@ -330,11 +336,11 @@ export function ProjectPage() {
 														) : table.isVectorized ? (
 															<Sparkles className="h-3.5 w-3.5 shrink-0 text-primary" />
 														) : (
-															<span className="text-xs opacity-60 shrink-0">
+															<span className="opacity-60 shrink-0">
 																{table.rowCount.toLocaleString()}
 															</span>
 														)}
-													</div>
+													</button>
 												);
 											})}
 											<div className="pt-4">
@@ -356,24 +362,26 @@ export function ProjectPage() {
 				{/* Main area */}
 				<main className="flex-1 flex flex-col min-h-0 overflow-hidden">
 					<TabsContent value="browser" className="flex-1 m-0 overflow-hidden">
-						{selectedTable ? (
-							<TableViewer
-								projectId={id!}
-								tableName={selectedTable}
-								isVectorized={
-									tables.find((t) => t.name === selectedTable)?.isVectorized
-								}
-								onVectorize={() => setVectorizeTable(selectedTable)}
-							/>
-						) : (
-							<div className="flex flex-col items-center justify-center h-full text-center">
-								<Table className="h-12 w-12 text-muted-foreground mb-4" />
-								<h3 className="font-medium mb-1">Select a table</h3>
-								<p className="text-sm text-muted-foreground">
-									Choose a table from the sidebar to view its data
-								</p>
-							</div>
-						)}
+						<ErrorBoundary>
+							{selectedTable ? (
+								<TableViewer
+									projectId={id!}
+									tableName={selectedTable}
+									isVectorized={
+										tables.find((t) => t.name === selectedTable)?.isVectorized
+									}
+									onVectorize={() => setVectorizeTable(selectedTable)}
+								/>
+							) : (
+								<div className="flex flex-col items-center justify-center h-full text-center">
+									<Table className="h-12 w-12 text-muted-foreground mb-4" />
+									<h3 className="font-medium mb-1">Select a table</h3>
+									<p className="text-sm text-muted-foreground">
+										Choose a table from the sidebar to view its data
+									</p>
+								</div>
+							)}
+						</ErrorBoundary>
 					</TabsContent>
 
 					<TabsContent value="schema" className="flex-1 m-0 overflow-hidden">
@@ -437,14 +445,18 @@ export function ProjectPage() {
 					</TabsContent>
 
 					<TabsContent value="query" className="flex-1 m-0 overflow-hidden">
-						<SqlEditor projectId={id!} />
+						<ErrorBoundary>
+							<SqlEditor projectId={id!} />
+						</ErrorBoundary>
 					</TabsContent>
 
 					<TabsContent
 						value="chat"
 						className="flex-1 m-0 min-h-0 overflow-hidden"
 					>
-						<ChatPanel projectId={id!} />
+						<ErrorBoundary>
+							<ChatPanel projectId={id!} />
+						</ErrorBoundary>
 					</TabsContent>
 				</main>
 			</div>

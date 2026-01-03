@@ -164,7 +164,7 @@
 
 .theme-glass.dark {
   /* macOS dark mode neutral grays */
-  --background: oklch(0.16 0 0);
+  --background: oklch(20.463% 0.00002 271.152);
   --foreground: oklch(0.93 0 0);
   --card: oklch(0.22 0 0 / 0.7);
   --card-foreground: oklch(0.93 0 0);
@@ -464,7 +464,7 @@
   --foreground: oklch(0.4355 0.0430 279.3250);
   --card: oklch(1.0000 0 0);
   --card-foreground: oklch(0.4355 0.0430 279.3250);
-  --popover: oklch(0.8575 0.0145 268.4756);
+  --popover: oklch(94.347% 0.00557 274.897);
   --popover-foreground: oklch(0.4355 0.0430 279.3250);
   --primary: oklch(0.5547 0.2503 297.0156);
   --primary-foreground: oklch(1.0000 0 0);
@@ -515,7 +515,7 @@
   --foreground: oklch(0.8787 0.0426 272.2767);
   --card: oklch(0.2429 0.0304 283.9110);
   --card-foreground: oklch(0.8787 0.0426 272.2767);
-  --popover: oklch(0.4037 0.0320 280.1520);
+  --popover: oklch(24.383% 0.0229 280.831);
   --popover-foreground: oklch(0.8787 0.0426 272.2767);
   --primary: oklch(0.7871 0.1187 304.7693);
   --primary-foreground: oklch(0.2429 0.0304 283.9110);
@@ -659,12 +659,44 @@ html {
   font-size: 14px;
 }
 
+/* Glass theme uses Finder-like 13px base */
+.theme-glass {
+  font-size: 13px;
+}
+
 body {
   background-color: var(--color-background);
   color: var(--color-foreground);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Glass theme typography - Finder style */
+.theme-glass body {
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+.theme-glass h1,
+.theme-glass h2,
+.theme-glass h3,
+.theme-glass h4,
+.theme-glass h5,
+.theme-glass h6 {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+/* Finder-style labels and headers */
+.theme-glass label,
+.theme-glass th,
+.theme-glass .font-medium {
+  font-weight: 500;
+}
+
+.theme-glass .font-semibold {
+  font-weight: 600;
 }
 
 /* ========================================
@@ -828,3 +860,155 @@ body {
 .theme-mono .mesh-gradient {
   background: var(--background);
 }
+
+/* ========================================
+   TABLES - Global Styles (All Themes)
+   ======================================== */
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 13px;
+  border:0;
+}
+
+/* Table header */
+thead {
+  background: var(--background);
+  backdrop-filter: blur(3px) saturate(180%);
+}
+
+thead tr {
+  border-bottom: 1px solid var(--border);
+}
+
+table th {
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--muted-foreground);
+  text-transform: none;
+  letter-spacing: 0;
+  padding: 6px 12px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+tbody {
+  border-radius: 7px;
+}
+
+/* Alternating row backgrounds */
+tbody tr:nth-child(odd) {
+  background: transparent;
+}
+
+tbody tr:nth-child(even) {
+  background: rgba(128, 128, 128, 0.06);
+}
+
+.dark tbody tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* Row hover */
+tbody tr {
+  transition: background-color 0.1s ease;
+}
+
+tbody tr:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.dark tbody tr:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Table cells */
+td {
+  padding: 5px 12px;
+  white-space: nowrap;
+}
+
+.dark td {
+  
+  
+}
+
+/* Remove last row border */
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* ========================================
+   GLASS THEME - Finder-Style Toolbar
+   ======================================== */
+.theme-glass .border-b {
+  border-color: oklch(0 0 0 / 0.1);
+}
+
+.theme-glass.dark .border-b {
+  border-color: oklch(1 0 0 / 0.1);
+}
+
+.theme-glass .border-t {
+  border-color: oklch(0 0 0 / 0.1);
+}
+
+.theme-glass.dark .border-t {
+  border-color: oklch(1 0 0 / 0.1);
+}
+
+/* Finder-style secondary buttons */
+.theme-glass button[data-variant="outline"],
+.theme-glass [data-slot="trigger"] {
+  background: oklch(1 0 0 / 0.6);
+  border-color: oklch(0 0 0 / 0.12);
+  font-weight: 400;
+  font-size: 12px;
+}
+
+.theme-glass.dark button[data-variant="outline"],
+.theme-glass.dark [data-slot="trigger"] {
+  background: oklch(0.3 0 0 / 0.5);
+  border-color: oklch(1 0 0 / 0.1);
+}
+
+.theme-glass button[data-variant="outline"]:hover,
+.theme-glass [data-slot="trigger"]:hover {
+  background: oklch(0.97 0 0);
+}
+
+.theme-glass.dark button[data-variant="outline"]:hover,
+.theme-glass.dark [data-slot="trigger"]:hover {
+  background: oklch(0.35 0 0 / 0.6);
+}
+
+/* Finder-style inputs */
+.theme-glass input,
+.theme-glass textarea {
+  background: oklch(1 0 0 / 0.8);
+  border-color: oklch(0 0 0 / 0.15);
+  font-size: 13px;
+}
+
+.theme-glass.dark input,
+.theme-glass.dark textarea {
+  background: oklch(0 0 0 / 0.25);
+  border-color: oklch(1 0 0 / 0.12);
+}
+
+.theme-glass input:focus,
+.theme-glass textarea:focus {
+  border-color: oklch(0.59 0.24 255);
+  box-shadow: 0 0 0 3px oklch(0.59 0.24 255 / 0.2);
+}
+
+/* Finder-style muted text */
+.theme-glass .text-muted-foreground {
+  color: oklch(0.45 0 0);
+}
+
+.theme-glass.dark .text-muted-foreground {
+  color: oklch(0.55 0 0);
+}
+
+

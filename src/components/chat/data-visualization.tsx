@@ -133,6 +133,7 @@ export function DataVisualization({ result, config, description, sql }: DataVisu
                 <YAxis
                   tick={{ fontSize: 11 }}
                   className="text-muted-foreground"
+                  tickFormatter={formatLargeNumber}
                 />
                 <Tooltip
                   contentStyle={{
@@ -141,6 +142,7 @@ export function DataVisualization({ result, config, description, sql }: DataVisu
                     borderRadius: "8px",
                     fontSize: "12px"
                   }}
+                  formatter={(value: number) => [formatLargeNumber(value), detectedKeys.y]}
                 />
                 <Legend />
                 <Bar
@@ -166,6 +168,7 @@ export function DataVisualization({ result, config, description, sql }: DataVisu
                 <YAxis
                   tick={{ fontSize: 11 }}
                   className="text-muted-foreground"
+                  tickFormatter={formatLargeNumber}
                 />
                 <Tooltip
                   contentStyle={{
@@ -174,6 +177,7 @@ export function DataVisualization({ result, config, description, sql }: DataVisu
                     borderRadius: "8px",
                     fontSize: "12px"
                   }}
+                  formatter={(value: number) => [formatLargeNumber(value), detectedKeys.y]}
                 />
                 <Legend />
                 <Line
@@ -268,4 +272,17 @@ function formatCell(value: unknown): string {
   if (typeof value === "number") return value.toLocaleString();
   if (typeof value === "object") return JSON.stringify(value);
   return String(value);
+}
+
+function formatLargeNumber(value: number): string {
+  if (Math.abs(value) >= 1_000_000_000) {
+    return `${(value / 1_000_000_000).toFixed(1).replace(/\.0$/, "")}B`;
+  }
+  if (Math.abs(value) >= 1_000_000) {
+    return `${(value / 1_000_000).toFixed(1).replace(/\.0$/, "")}M`;
+  }
+  if (Math.abs(value) >= 1_000) {
+    return `${(value / 1_000).toFixed(1).replace(/\.0$/, "")}K`;
+  }
+  return value.toLocaleString();
 }

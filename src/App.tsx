@@ -3,6 +3,7 @@ import { Routes, Route, useNavigate } from "react-router-dom";
 import { listen } from "@tauri-apps/api/event";
 import { HomePage, ProjectPage } from "@/pages";
 import { UpdateBanner } from "@/components/settings";
+import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { useAppStore } from "@/stores";
 import { useUpdateStore } from "@/stores/update-store";
 
@@ -33,13 +34,13 @@ function App() {
   }, [navigate, setShowNewProjectDialog, checkForUpdates]);
 
   return (
-    <>
+    <ErrorBoundary>
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/project/:id" element={<ProjectPage />} />
       </Routes>
       <UpdateBanner />
-    </>
+    </ErrorBoundary>
   );
 }
 
