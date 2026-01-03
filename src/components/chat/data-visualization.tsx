@@ -142,7 +142,7 @@ export function DataVisualization({ result, config, description, sql }: DataVisu
                     borderRadius: "8px",
                     fontSize: "12px"
                   }}
-                  formatter={(value: number) => [formatLargeNumber(value), detectedKeys.y]}
+                  formatter={(value?: number) => [formatLargeNumber(value ?? 0), detectedKeys.y]}
                 />
                 <Legend />
                 <Bar
@@ -177,7 +177,7 @@ export function DataVisualization({ result, config, description, sql }: DataVisu
                     borderRadius: "8px",
                     fontSize: "12px"
                   }}
-                  formatter={(value: number) => [formatLargeNumber(value), detectedKeys.y]}
+                  formatter={(value?: number) => [formatLargeNumber(value ?? 0), detectedKeys.y]}
                 />
                 <Legend />
                 <Line
