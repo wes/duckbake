@@ -2,9 +2,11 @@ import { serve } from "bun";
 import index from "./index.html";
 import terms from "./terms.html";
 import privacy from "./privacy.html";
+import notFoundPage from "./404.html";
 
 const server = serve({
   routes: {
+    "/": index,
     "/terms": terms,
     "/privacy": privacy,
 
@@ -27,9 +29,15 @@ const server = serve({
         headers: { "Content-Type": "image/png" },
       });
     },
+    "/og-image-v2.png": async () => {
+      const file = Bun.file(import.meta.dir + "/og-image-v2.png");
+      return new Response(file, {
+        headers: { "Content-Type": "image/png" },
+      });
+    },
 
-    // Serve index.html for all unmatched routes.
-    "/*": index,
+    // 404 handler for unmatched routes - serve branded 404 page
+    "/*": notFoundPage,
 
     "/api/hello": {
       async GET(req) {
