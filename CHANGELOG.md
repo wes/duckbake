@@ -2,6 +2,11 @@
 
 All notable changes to DuckBake will be documented in this file.
 
+## [0.0.35] - 2026-01-04
+
+### Changes
+
+- Styling scrollbars
 ## [0.0.34] - 2026-01-03
 
 ### Changes
