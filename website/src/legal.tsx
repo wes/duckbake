@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import "./index.css";
-import duckbakeLogo from "./duckbake.png";
+import duckbakeLogo from "../public/duckbake.png";
 
 function DuckLogo({ className }: { className?: string }) {
 	return <img src={duckbakeLogo} alt="DuckBake Logo" className={className} />;

@@ -5,11 +5,11 @@ const WIDTH = 1200;
 const HEIGHT = 630;
 
 async function generateOGImage() {
-  const srcDir = path.join(import.meta.dir, "../src");
-  const outputPath = path.join(srcDir, "og-image.png");
+  const publicDir = path.join(import.meta.dir, "../public");
+  const outputPath = path.join(publicDir, "og-image.png");
 
   // Load the screenshot
-  const screenshotPath = path.join(srcDir, "screenshots/home.png");
+  const screenshotPath = path.join(publicDir, "screenshots/home.png");
   const screenshot = await sharp(screenshotPath)
     .resize(800, null, { fit: "inside" })
     .toBuffer();
@@ -19,7 +19,7 @@ async function generateOGImage() {
   const screenshotHeight = screenshotMeta.height || 500;
 
   // Load the logo
-  const logoPath = path.join(srcDir, "duckbake-square.png");
+  const logoPath = path.join(publicDir, "duckbake-square.png");
   const logo = await sharp(logoPath).resize(80, 80).toBuffer();
 
   // Create gradient background matching the dark theme

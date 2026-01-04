@@ -154,17 +154,22 @@ const outputTable = result.outputs.map(output => ({
 
 console.table(outputTable);
 
-// Copy SEO and static files to output
-console.log("\n📋 Copying SEO and static files...");
-const seoFiles = ["robots.txt", "sitemap.xml", "og-image.png", "og-image-v2.png", "og-image-v3.png", "favicon.ico", "site.webmanifest", "favicon-192x192.png", "favicon-512x512.png"];
-for (const file of seoFiles) {
-  const src = path.join("src", file);
-  const dest = path.join(outdir, file);
-  if (existsSync(src)) {
-    await Bun.write(dest, Bun.file(src));
-    console.log(`   ✓ ${file}`);
+// Copy public folder to output
+console.log("\n📋 Copying public folder...");
+const publicDir = path.join(process.cwd(), "public");
+async function copyDir(src: string, dest: string) {
+  const entries = await Array.fromAsync(new Bun.Glob("**/*").scan({ cwd: src, dot: false }));
+  for (const entry of entries) {
+    const srcPath = path.join(src, entry);
+    const destPath = path.join(dest, entry);
+    const stat = await Bun.file(srcPath).exists();
+    if (stat) {
+      await Bun.write(destPath, Bun.file(srcPath));
+      console.log(`   ✓ ${entry}`);
+    }
   }
 }
+await copyDir(publicDir, outdir);
 
 const buildTime = (end - start).toFixed(2);
 

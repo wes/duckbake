@@ -1,9 +1,9 @@
 // Import screenshots directly
-import projectChat from "../screenshots/project-chat.png";
-import home from "../screenshots/home.png";
-import projectBrowser from "../screenshots/project-browser.png";
-import projectQuery from "../screenshots/project-query.png";
-import screenshotTheme from "../screenshots/screenshot-theme.png";
+import projectChat from "../../public/screenshots/project-chat.png";
+import home from "../../public/screenshots/home.png";
+import projectBrowser from "../../public/screenshots/project-browser.png";
+import projectQuery from "../../public/screenshots/project-query.png";
+import screenshotTheme from "../../public/screenshots/screenshot-theme.png";
 
 export interface Screenshot {
 	src: string;

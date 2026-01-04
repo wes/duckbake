@@ -3,7 +3,7 @@ import { animate } from "animejs";
 import { Button } from "@/components/ui/button";
 import { Home, ArrowLeft } from "lucide-react";
 import "./index.css";
-import duckbakeLogo from "./duckbake.png";
+import duckbakeLogo from "../public/duckbake.png";
 
 function NotFoundPage() {
 	const containerRef = useRef<HTMLDivElement>(null);

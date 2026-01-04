@@ -27,7 +27,7 @@ import {
 	GitPullRequest,
 } from "lucide-react";
 import "./index.css";
-import duckbakeLogo from "./duckbake.png";
+import duckbakeLogo from "../public/duckbake.png";
 import { ScreenshotCarousel } from "@/components/screenshot-carousel";
 import { getScreenshots } from "@/lib/screenshots";
 
