@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Apple code signing (keep profiles out of git)
+*.provisionprofile
+*.p12
+*.p8
+*.cer

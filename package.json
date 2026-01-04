@@ -17,6 +17,7 @@
     "release:mac": "tauri build --target universal-apple-darwin",
     "release:mac-arm": "tauri build --target aarch64-apple-darwin",
     "release:mac-intel": "tauri build --target x86_64-apple-darwin",
+    "build:appstore": "tauri build --bundles app --target universal-apple-darwin --config src-tauri/tauri.appstore.conf.json",
     "screenshots": "bun scripts/screenshots.ts",
     "screenshots:manual": "./scripts/screenshots-manual.sh"
   },
