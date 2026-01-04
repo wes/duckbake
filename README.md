@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="website/src/duckbake.png" alt="DuckBake" width="128" height="128">
+  <img src="website/public/duckbake.png" alt="DuckBake" width="128" height="128">
 </p>
 
 <h1 align="center">DuckBake</h1>
@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <img src="website/src/screenshots/project-browser.png" alt="DuckBake - Data Browser" width="800">
+  <img src="website/public/screenshots/project-browser.png" alt="DuckBake - Data Browser" width="800">
 </p>
 
 ## Features
@@ -29,12 +29,12 @@
 ## Screenshots
 
 <p align="center">
-  <img src="website/src/screenshots/project-query.png" alt="SQL Editor" width="800">
+  <img src="website/public/screenshots/project-query.png" alt="SQL Editor" width="800">
   <br><em>SQL Editor with syntax highlighting and autocomplete</em>
 </p>
 
 <p align="center">
-  <img src="website/src/screenshots/project-chat.png" alt="AI Chat" width="800">
+  <img src="website/public/screenshots/project-chat.png" alt="AI Chat" width="800">
   <br><em>Chat with your data using natural language</em>
 </p>
 
