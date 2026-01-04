@@ -156,7 +156,7 @@ console.table(outputTable);
 
 // Copy SEO and static files to output
 console.log("\n📋 Copying SEO and static files...");
-const seoFiles = ["robots.txt", "sitemap.xml", "og-image.png", "og-image-v2.png", "favicon.ico", "site.webmanifest", "favicon-192x192.png", "favicon-512x512.png"];
+const seoFiles = ["robots.txt", "sitemap.xml", "og-image.png", "og-image-v2.png", "og-image-v3.png", "favicon.ico", "site.webmanifest", "favicon-192x192.png", "favicon-512x512.png"];
 for (const file of seoFiles) {
   const src = path.join("src", file);
   const dest = path.join(outdir, file);
