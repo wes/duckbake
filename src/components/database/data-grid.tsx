@@ -101,7 +101,7 @@ export function DataGrid({
 	}
 
 	return (
-		<div ref={tableContainerRef} className="h-full overflow-auto">
+		<div ref={tableContainerRef} className="data-grid-scroll h-full overflow-auto">
 			<table>
 				<thead className="sticky top-0 z-10">
 					{table.getHeaderGroups().map((headerGroup) => (
