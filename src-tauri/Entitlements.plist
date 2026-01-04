@@ -1,23 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-	<dict>
-		<!-- Required for Mac App Store -->
-		<key>com.apple.security.app-sandbox</key>
-		<true />
-
-		<!-- App identifier - replace YOUR_TEAM_ID with your 10-character Team ID -->
-		<key>com.apple.application-identifier</key>
-		<string>ULMVR3KWCR.com.joedesigns.duckbake</string>
-		<key>com.apple.developer.team-identifier</key>
-		<string>ULMVR3KWCR</string>
-
-		<!-- Network access for Ollama API -->
-		<key>com.apple.security.network.client</key>
-		<true />
-
-		<!-- File access for importing CSV, Excel, Parquet, etc. -->
-		<key>com.apple.security.files.user-selected.read-write</key>
-		<true />
-	</dict>
+<dict>
+	<key>com.apple.security.app-sandbox</key>
+	<true/>
+	<key>com.apple.application-identifier</key>
+	<string>ULMVR3KWCR.com.joedesigns.duckbake</string>
+	<key>com.apple.developer.team-identifier</key>
+	<string>ULMVR3KWCR</string>
+	<key>com.apple.security.network.client</key>
+	<true/>
+	<key>com.apple.security.files.user-selected.read-write</key>
+	<true/>
+</dict>
 </plist>

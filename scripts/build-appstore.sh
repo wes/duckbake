@@ -19,7 +19,7 @@ echo "=== Building App Store version of ${APP_NAME} ==="
 # Step 1: Build the app bundle
 echo ""
 echo "Step 1: Building universal app bundle..."
-bun run build:appstore
+bunx tauri build --bundles app --target universal-apple-darwin --config src-tauri/tauri.appstore.conf.json
 
 if [ ! -d "$BUNDLE_PATH" ]; then
     echo "Error: App bundle not found at $BUNDLE_PATH"
