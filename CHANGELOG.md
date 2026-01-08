@@ -2,6 +2,38 @@
 
 All notable changes to DuckBake will be documented in this file.
 
+## [0.0.36] - 2026-01-08
+
+### Bug Fixes
+
+- Fixing broken images on readme
+- Fixing 404 and image assets
+- Fixing 404
+- Fixing build for og-image
+
+### Changes
+
+- UI Polish, Import and Export of Projects, Better Document suppoert, Context switcher for chat, Chat UI polish
+- Move static assets to public folder
+
+- Create public/ folder for static assets
+- Move images, favicons, og-images, robots.txt, sitemap.xml to public/
+- Update build.ts to copy public folder to dist
+- Update generate scripts to use public folder
+- Update HTML and TSX imports to reference public paths
+- Bump og-image to v3 in terms.html and privacy.html
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
+- Og-image bump to v3
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
+- Og-image refresh
+- Og-image bump for twtitter and some scripts for appstore build
+- Appstore dist
 ## [0.0.35] - 2026-01-04
 
 ### Changes
