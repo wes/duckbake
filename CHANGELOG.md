@@ -2,6 +2,11 @@
 
 All notable changes to DuckBake will be documented in this file.
 
+## [0.0.37] - 2026-01-08
+
+### Changes
+
+- Bun release:appstore
 ## [0.0.36] - 2026-01-08
 
 ### Bug Fixes
