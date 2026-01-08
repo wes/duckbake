@@ -80,13 +80,21 @@ function gitCommitAndTag(version: string) {
   execSync("git push && git push --tags", { cwd: ROOT, stdio: "inherit" });
 }
 
+function buildAppStore() {
+  console.log("\n🍎 Building for Mac App Store...\n");
+  execSync("./scripts/build-appstore.sh", { cwd: ROOT, stdio: "inherit" });
+}
+
 function main() {
   const args = process.argv.slice(2);
-  const bumpType: BumpType = (args[0] as BumpType) || "patch";
+  const includeAppStore = args.includes("--appstore");
+  const filteredArgs = args.filter((arg) => arg !== "--appstore");
+  const bumpType: BumpType = (filteredArgs[0] as BumpType) || "patch";
 
   if (!["major", "minor", "patch"].includes(bumpType)) {
-    console.error("Usage: bun release [major|minor|patch]");
+    console.error("Usage: bun release [major|minor|patch] [--appstore]");
     console.error("  Default: patch");
+    console.error("  --appstore: Also build .pkg for Mac App Store");
     process.exit(1);
   }
 
@@ -114,6 +122,10 @@ function main() {
   console.log(`\nRelease v${newVersion} created and pushed!`);
   console.log("GitHub Actions will now build and create the release.");
   console.log(`View progress at: https://github.com/wes/duckbake/actions`);
+
+  if (includeAppStore) {
+    buildAppStore();
+  }
 }
 
 main();

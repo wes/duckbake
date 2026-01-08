@@ -11,6 +11,7 @@
     "dev:website": "cd website && bun dev",
     "deploy:website": "cd website && fly deploy",
     "release": "bun scripts/release.ts",
+    "release:appstore": "bun scripts/release.ts --appstore",
     "release:major": "bun scripts/release.ts major",
     "release:minor": "bun scripts/release.ts minor",
     "build:release": "tauri build",
