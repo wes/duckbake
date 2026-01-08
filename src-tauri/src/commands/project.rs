@@ -66,6 +66,41 @@ pub async fn get_all_project_stats(state: State<'_, AppState>) -> Result<Vec<Pro
         let conn = state.duckdb.get_connection(&project_summary.id, &db_path)?;
         let conn = conn.lock();
 
+        // Ensure metadata tables exist before querying them
+        conn.execute_batch(
+            r#"
+            CREATE TABLE IF NOT EXISTS _duckbake_conversations (
+                id VARCHAR PRIMARY KEY,
+                project_id VARCHAR NOT NULL,
+                title VARCHAR NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE TABLE IF NOT EXISTS _duckbake_saved_queries (
+                id VARCHAR PRIMARY KEY,
+                project_id VARCHAR NOT NULL,
+                name VARCHAR NOT NULL,
+                sql TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE TABLE IF NOT EXISTS _duckbake_documents (
+                id VARCHAR PRIMARY KEY,
+                project_id VARCHAR NOT NULL,
+                filename VARCHAR NOT NULL,
+                file_type VARCHAR NOT NULL,
+                file_size BIGINT NOT NULL,
+                page_count INTEGER,
+                word_count INTEGER NOT NULL,
+                title VARCHAR,
+                author VARCHAR,
+                creation_date VARCHAR,
+                content TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            "#,
+        )?;
+
         // Get table count and total rows
         let tables = state.duckdb.get_tables(&conn)?;
         let table_count = tables.len() as u32;
