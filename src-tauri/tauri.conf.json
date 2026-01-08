@@ -41,7 +41,7 @@
     "shortDescription": "SQL analytics with local AI",
     "longDescription": "DuckBake is a desktop application for data analysis using DuckDB with AI capabilities powered by Ollama.",
     "macOS": {
-      "minimumSystemVersion": "10.15",
+      "minimumSystemVersion": "12.0",
       "dmg": {
         "appPosition": {
           "x": 180,
