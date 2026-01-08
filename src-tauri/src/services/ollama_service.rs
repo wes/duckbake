@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use tauri::{Emitter, Window};
 
 use crate::error::{AppError, Result};
-use crate::models::{OllamaModel, OllamaStatus, OllamaTagsResponse, OllamaVersionResponse};
+use crate::models::{OllamaModel, OllamaPullProgress, OllamaStatus, OllamaTagsResponse, OllamaVersionResponse};
 
 const DEFAULT_EMBEDDING_MODEL: &str = "nomic-embed-text";
 
@@ -20,6 +20,12 @@ struct ChatRequest {
     model: String,
     messages: Vec<ChatMessageRequest>,
     stream: bool,
+    options: ChatOptions,
+}
+
+#[derive(Debug, Serialize)]
+struct ChatOptions {
+    num_ctx: u32,
 }
 
 #[derive(Debug, Serialize)]
@@ -133,9 +139,17 @@ impl OllamaService {
         let mut chat_messages: Vec<ChatMessageRequest> = Vec::new();
 
         // Add system message with context if provided
-        let base_prompt = r#"You are a helpful data analyst assistant working with a DuckDB database.
+        let base_prompt = r#"You are a helpful data analyst assistant working with a DuckDB database and document library.
 
-RESPONSE FORMAT:
+You have access to:
+1. DATABASE TABLES - Structured data you can query with SQL
+2. DOCUMENT EXCERPTS - Relevant passages from uploaded documents (PDFs, Word docs, text files, etc.)
+
+When the user asks about documents, reference the document excerpts provided in the context.
+When the user asks about data/metrics, write SQL queries against the database tables.
+For questions that span both, combine insights from both sources.
+
+RESPONSE FORMAT FOR DATA QUERIES:
 When answering data questions, provide a brief explanation followed by a query block. Do NOT show raw SQL to the user - use this special format instead:
 
 ```duckbake
@@ -154,7 +168,10 @@ VISUALIZATION GUIDELINES:
 - Use "line" for trends over time (e.g., monthly sales, daily users)
 - Use "pie" for showing proportions of a whole (e.g., market share, percentages) - limit to 5-7 slices
 
-EXAMPLE:
+RESPONSE FORMAT FOR DOCUMENT QUESTIONS:
+When answering questions about documents, provide a clear answer based on the document excerpts in the context. Reference the source document name when citing information.
+
+EXAMPLE (Data Query):
 User: "Show me sales by region"
 Response: Here's the breakdown of sales by region:
 
@@ -163,11 +180,12 @@ Response: Here's the breakdown of sales by region:
 ```
 
 IMPORTANT:
-- Always use valid DuckDB SQL syntax
+- Always use valid DuckDB SQL syntax for data queries
 - Keep queries efficient with appropriate LIMIT clauses for large results
 - Choose the most appropriate visualization for the data
 - Provide brief context before the query block
-- You can include multiple query blocks for complex analyses"#;
+- You can include multiple query blocks for complex analyses
+- When referencing documents, cite the document name"#;
 
         if let Some(ctx) = context {
             chat_messages.push(ChatMessageRequest {
@@ -193,6 +211,9 @@ IMPORTANT:
             model: model.to_string(),
             messages: chat_messages,
             stream: true,
+            options: ChatOptions {
+                num_ctx: 8192, // Larger context window to fit document content
+            },
         };
 
         let response = self
@@ -336,5 +357,97 @@ IMPORTANT:
 
         let embed_response: EmbeddingResponse = response.json().await?;
         Ok(embed_response.embeddings)
+    }
+
+    /// Pull/download a model from Ollama registry
+    pub async fn pull_model(&self, window: &Window, model: &str) -> Result<()> {
+        let url = format!("{}/api/pull", self.base_url);
+
+        #[derive(Serialize)]
+        struct PullRequest {
+            name: String,
+            stream: bool,
+        }
+
+        let request = PullRequest {
+            name: model.to_string(),
+            stream: true,
+        };
+
+        let response = self
+            .client
+            .post(&url)
+            .json(&request)
+            .send()
+            .await
+            .map_err(|_| AppError::OllamaNotAvailable)?;
+
+        if !response.status().is_success() {
+            let status = response.status();
+            let body = response.text().await.unwrap_or_default();
+            return Err(AppError::Custom(format!(
+                "Failed to pull model ({}): {}",
+                status, body
+            )));
+        }
+
+        let mut stream = response.bytes_stream();
+
+        while let Some(chunk) = stream.next().await {
+            match chunk {
+                Ok(bytes) => {
+                    let text = String::from_utf8_lossy(&bytes);
+                    for line in text.lines() {
+                        if line.is_empty() {
+                            continue;
+                        }
+                        if let Ok(progress) = serde_json::from_str::<OllamaPullProgress>(line) {
+                            let _ = window.emit("ollama-pull-progress", &progress);
+                            if progress.status == "success" {
+                                return Ok(());
+                            }
+                        }
+                    }
+                }
+                Err(e) => {
+                    return Err(AppError::Custom(format!("Pull stream error: {}", e)));
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Delete a model from Ollama
+    pub async fn delete_model(&self, model: &str) -> Result<()> {
+        let url = format!("{}/api/delete", self.base_url);
+
+        #[derive(Serialize)]
+        struct DeleteRequest {
+            name: String,
+        }
+
+        let request = DeleteRequest {
+            name: model.to_string(),
+        };
+
+        let response = self
+            .client
+            .delete(&url)
+            .json(&request)
+            .send()
+            .await
+            .map_err(|_| AppError::OllamaNotAvailable)?;
+
+        if !response.status().is_success() {
+            let status = response.status();
+            let body = response.text().await.unwrap_or_default();
+            return Err(AppError::Custom(format!(
+                "Failed to delete model ({}): {}",
+                status, body
+            )));
+        }
+
+        Ok(())
     }
 }

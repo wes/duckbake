@@ -52,4 +52,6 @@ pub struct ProjectStats {
     pub total_rows: u64,
     pub conversation_count: u32,
     pub saved_query_count: u32,
+    pub document_count: u32,
+    pub storage_size: u64,
 }

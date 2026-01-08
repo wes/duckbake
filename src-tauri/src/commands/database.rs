@@ -69,6 +69,33 @@ pub async fn query_table(
 }
 
 #[tauri::command]
+pub async fn delete_table(
+    state: State<'_, AppState>,
+    project_id: String,
+    table_name: String,
+) -> Result<()> {
+    let storage = state.storage.lock();
+    let project = storage.get_project(&project_id)?;
+    let db_path = storage.get_database_path(&project);
+    drop(storage);
+
+    let conn = state.duckdb.get_connection(&project_id, &db_path)?;
+    let conn = conn.lock();
+
+    // Drop the table
+    let sql = format!("DROP TABLE IF EXISTS \"{}\"", table_name.replace("\"", "\"\""));
+    conn.execute(&sql, [])?;
+
+    // Also remove any vectorization data for this table
+    let _ = conn.execute(
+        &format!("DROP TABLE IF EXISTS \"_duckbake_embeddings_{}\"", table_name.replace("\"", "\"\"")),
+        [],
+    );
+
+    Ok(())
+}
+
+#[tauri::command]
 pub async fn get_project_context(
     state: State<'_, AppState>,
     project_id: String,

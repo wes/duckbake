@@ -26,4 +26,6 @@ export interface ProjectStats {
   totalRows: number;
   conversationCount: number;
   savedQueryCount: number;
+  documentCount: number;
+  storageSize: number;
 }

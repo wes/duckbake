@@ -19,6 +19,9 @@ import type {
   ConversationWithMessages,
   ChatMessage,
   SavedQuery,
+  Document,
+  DocumentInfo,
+  DocumentSearchResult,
 } from "@/types";
 
 // Project commands
@@ -53,6 +56,20 @@ export async function updateProject(
 
 export async function getAllProjectStats(): Promise<ProjectStats[]> {
   return invoke("get_all_project_stats");
+}
+
+export async function exportProject(
+  projectId: string,
+  destinationPath: string
+): Promise<void> {
+  return invoke("export_project", { projectId, destinationPath });
+}
+
+export async function importProject(
+  sourcePath: string,
+  projectName: string
+): Promise<Project> {
+  return invoke("import_project", { sourcePath, projectName });
 }
 
 // Database commands
@@ -91,6 +108,13 @@ export async function getProjectContext(
   return invoke("get_project_context", { projectId });
 }
 
+export async function deleteTable(
+  projectId: string,
+  tableName: string
+): Promise<void> {
+  return invoke("delete_table", { projectId, tableName });
+}
+
 // Import commands
 export async function previewImport(
   projectId: string,
@@ -127,6 +151,14 @@ export async function sendChatMessage(
   context?: string
 ): Promise<void> {
   return invoke("send_chat_message", { model, messages, context });
+}
+
+export async function pullOllamaModel(model: string): Promise<void> {
+  return invoke("pull_ollama_model", { model });
+}
+
+export async function deleteOllamaModel(model: string): Promise<void> {
+  return invoke("delete_ollama_model", { model });
 }
 
 // Vectorization commands
@@ -248,4 +280,57 @@ export async function deleteSavedQuery(
   queryId: string
 ): Promise<void> {
   return invoke("delete_saved_query", { projectId, queryId });
+}
+
+// Document commands
+export async function uploadDocument(
+  projectId: string,
+  filePath: string
+): Promise<DocumentInfo> {
+  return invoke("upload_document", { projectId, filePath });
+}
+
+export async function getDocuments(projectId: string): Promise<DocumentInfo[]> {
+  return invoke("get_documents", { projectId });
+}
+
+export async function getDocument(
+  projectId: string,
+  documentId: string
+): Promise<Document> {
+  return invoke("get_document", { projectId, documentId });
+}
+
+export async function deleteDocument(
+  projectId: string,
+  documentId: string
+): Promise<void> {
+  return invoke("delete_document", { projectId, documentId });
+}
+
+export async function vectorizeDocument(
+  projectId: string,
+  documentId: string
+): Promise<void> {
+  return invoke("vectorize_document", { projectId, documentId });
+}
+
+export async function getSupportedDocumentExtensions(): Promise<string[]> {
+  return invoke("get_supported_document_extensions");
+}
+
+export async function semanticSearchDocuments(
+  projectId: string,
+  query: string,
+  limit?: number
+): Promise<DocumentSearchResult[]> {
+  return invoke("semantic_search_documents", { projectId, query, limit });
+}
+
+export async function getDocumentChunksById(
+  projectId: string,
+  documentId: string,
+  limit?: number
+): Promise<DocumentSearchResult[]> {
+  return invoke("get_document_chunks_by_id", { projectId, documentId, limit });
 }

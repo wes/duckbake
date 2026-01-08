@@ -27,3 +27,17 @@ pub async fn send_chat_message(
         .chat_stream(&window, &model, messages, context)
         .await
 }
+
+#[tauri::command]
+pub async fn pull_ollama_model(
+    state: State<'_, AppState>,
+    window: Window,
+    model: String,
+) -> Result<()> {
+    state.ollama.pull_model(&window, &model).await
+}
+
+#[tauri::command]
+pub async fn delete_ollama_model(state: State<'_, AppState>, model: String) -> Result<()> {
+    state.ollama.delete_model(&model).await
+}

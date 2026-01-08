@@ -105,7 +105,7 @@
 .theme-glass {
   /* macOS-style neutral grays */
   --background: oklch(0.97 0 0);
-  --foreground: oklch(0.13 0 0);
+  --foreground: oklch(28.908% 0.00003 271.152);
   --card: oklch(1.0 0 0 / 0.8);
   --card-foreground: oklch(0.13 0 0);
   --popover: oklch(0.99 0 0 / 0.95);
@@ -116,7 +116,7 @@
   --secondary: oklch(0.96 0 0);
   --secondary-foreground: oklch(0.25 0 0);
   --muted: oklch(0.94 0 0);
-  --muted-foreground: oklch(0.5 0 0);
+  --muted-foreground: oklch(46.4% 0.00005 271.152);
   --accent: oklch(0.96 0 0);
   --accent-foreground: oklch(0.25 0 0);
   /* macOS system red */
@@ -176,9 +176,9 @@
   --secondary: oklch(0.26 0 0);
   --secondary-foreground: oklch(0.93 0 0);
   --muted: oklch(0.24 0 0);
-  --muted-foreground: oklch(0.58 0 0);
+  --muted-foreground: oklch(92.797% 0.00011 271.152);
   --accent: oklch(0.26 0 0);
-  --accent-foreground: oklch(0.93 0 0);
+  --accent-foreground: oklch(100% 0.00011 271.152);
   /* macOS system red */
   --destructive: oklch(0.62 0.24 27);
   --destructive-foreground: oklch(1.0 0 0);
@@ -318,6 +318,34 @@
   --shadow-lg: none;
   --shadow-xl: none;
   --shadow-2xl: none;
+}
+
+/* Mono theme font size adjustments - monospace fonts appear larger */
+.theme-mono .prose {
+  font-size: 13px;
+}
+
+/* Sidebar items in mono theme */
+.theme-mono aside {
+  font-size: 12px;
+}
+
+.theme-mono aside .text-sm {
+  font-size: 12px;
+}
+
+/* Chat messages in mono theme */
+.theme-mono .text-\[15px\] {
+  font-size: 13px !important;
+}
+
+.theme-mono .text-\[13px\] {
+  font-size: 11px !important;
+}
+
+/* Sidebar item names in mono theme - tables and documents */
+.theme-mono aside .font-semibold {
+  font-size: 12px;
 }
 
 /* ========================================
@@ -868,7 +896,10 @@ table {
   border-collapse: collapse;
   width: 100%;
   font-size: 13px;
-  border:0;
+  border: 0;
+  user-select: none;
+  -webkit-user-select: none;
+  color: var(--foreground);
 }
 
 /* Table header */
@@ -884,7 +915,6 @@ thead tr {
 table th {
   font-weight: 600;
   font-size: 12px;
-  color: var(--muted-foreground);
   text-transform: none;
   letter-spacing: 0;
   padding: 6px 12px;
@@ -922,16 +952,22 @@ tbody tr:hover {
   background: rgba(255, 255, 255, 0.05);
 }
 
+/* Selected row - Finder-like blue highlight */
+tbody tr.selected {
+  background: rgba(0, 122, 255, 0.15) !important;
+}
+
+.dark tbody tr.selected {
+  background: rgba(0, 122, 255, 0.3) !important;
+}
+
 /* Table cells */
 td {
   padding: 5px 12px;
   white-space: nowrap;
+  color: var(--foreground) !important;
 }
 
-.dark td {
-  
-  
-}
 
 /* Remove last row border */
 tbody tr:last-child td {
@@ -1050,5 +1086,261 @@ tbody tr:last-child td {
 .dark .data-grid-scroll::-webkit-scrollbar-thumb:hover {
   background-color: rgba(255, 255, 255, 0.18);
 }
+
+/* ========================================
+   GLASS THEME - Finder-Style Project List
+   ======================================== */
+.theme-glass table {
+  font-size: 13px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Finder-style column headers */
+.theme-glass thead {
+  background: transparent;
+}
+
+.theme-glass table th {
+  font-weight: 500;
+  font-size: 11px;
+  color: oklch(0.5 0 0);
+  text-transform: none;
+  letter-spacing: 0;
+  padding: 8px 12px;
+  border-bottom: 1px solid oklch(0 0 0 / 0.08);
+}
+
+.theme-glass.dark table th {
+  color: oklch(0.55 0 0);
+  border-bottom-color: oklch(1 0 0 / 0.08);
+}
+
+/* Finder-style rows - taller with better spacing */
+.theme-glass tbody td {
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
+/* Project name column - Finder style */
+.theme-glass tbody td:first-child {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.theme-glass tbody td:first-child .font-semibold {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* Metadata columns - medium weight */
+.theme-glass tbody td:not(:first-child) {
+  font-weight: 500;
+  color: oklch(0.4 0 0);
+  font-size: 12px;
+}
+
+.theme-glass.dark tbody td:not(:first-child) {
+  color: oklch(0.6 0 0);
+}
+
+/* Finder-style alternating rows */
+.theme-glass tbody tr:nth-child(odd) {
+  background: transparent;
+}
+
+.theme-glass tbody tr:nth-child(even) {
+  background: oklch(0 0 0 / 0.025);
+}
+
+.theme-glass.dark tbody tr:nth-child(even) {
+  background: oklch(1 0 0 / 0.02);
+}
+
+/* Finder-style hover with rounded corners */
+.theme-glass tbody tr:hover {
+  background: oklch(0 0 0 / 0.04);
+}
+
+.theme-glass tbody tr:hover td:first-child {
+  border-radius: 6px 0 0 6px;
+}
+
+.theme-glass tbody tr:hover td:last-child {
+  border-radius: 0 6px 6px 0;
+}
+
+.theme-glass.dark tbody tr:hover {
+  background: oklch(1 0 0 / 0.04);
+}
+
+/* Finder-style selection - macOS blue with rounded corners */
+.theme-glass tbody tr.selected {
+  background: oklch(0.59 0.24 255 / 0.85) !important;
+}
+
+.theme-glass tbody tr.selected td {
+  color: white;
+}
+
+.theme-glass tbody tr.selected td:first-child {
+  border-radius: 6px 0 0 6px;
+}
+
+.theme-glass tbody tr.selected td:last-child {
+  border-radius: 0 6px 6px 0;
+}
+
+.theme-glass.dark tbody tr.selected {
+  background: oklch(0.55 0.24 255 / 0.9) !important;
+}
+
+.theme-glass.dark tbody tr.selected td {
+  color: white;
+}
+
+/* ========================================
+   GLASS THEME - Finder-Style Sidebar
+   ======================================== */
+/* Sidebar section headers */
+.theme-glass aside h3 {
+  font-size: 11px;
+  font-weight: 600;
+  color: oklch(0.5 0 0);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  padding: 8px 12px 4px;
+}
+
+.theme-glass.dark aside h3 {
+  color: oklch(0.55 0 0);
+}
+
+/* Sidebar items - Finder style */
+.theme-glass aside [class*="sidebar-item"],
+.theme-glass aside .flex.items-center.gap-2 {
+  font-size: 13px;
+  font-weight: 500;
+  padding: 6px 10px;
+  border-radius: 6px;
+  margin: 1px 4px;
+}
+
+/* Sidebar item name */
+.theme-glass aside .font-semibold {
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+/* Sidebar status text */
+.theme-glass aside .opacity-60 {
+  font-size: 11px;
+  font-weight: 400;
+}
+
+/* ========================================
+   GLASS THEME - Finder-Style Schema Table
+   ======================================== */
+.theme-glass .border.rounded-md table {
+  font-size: 13px;
+}
+
+.theme-glass .border.rounded-md thead {
+  background: oklch(0 0 0 / 0.02);
+}
+
+.theme-glass.dark .border.rounded-md thead {
+  background: oklch(1 0 0 / 0.03);
+}
+
+.theme-glass .border.rounded-md th {
+  font-size: 11px;
+  font-weight: 500;
+  color: oklch(0.5 0 0);
+  padding: 8px 16px;
+}
+
+.theme-glass.dark .border.rounded-md th {
+  color: oklch(0.55 0 0);
+}
+
+.theme-glass .border.rounded-md td {
+  padding: 8px 16px;
+  font-size: 13px;
+}
+
+.theme-glass .border.rounded-md td.font-mono {
+  font-size: 12px;
+}
+
+/* ========================================
+   GLASS THEME - Finder-Style Header
+   ======================================== */
+/* Project name in header */
+.theme-glass header .font-semibold {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* Dropdown menu items */
+.theme-glass [role="menuitem"] {
+  font-size: 13px;
+  font-weight: 400;
+  padding: 6px 10px;
+}
+
+.theme-glass [role="menuitem"] svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Tab triggers - Finder toolbar style */
+.theme-glass [role="tablist"] button {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 12px;
+}
+
+/* Empty state text */
+.theme-glass .text-center h3 {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.theme-glass .text-center p {
+  font-size: 12px;
+}
+
+/* ========================================
+   LOADING SHIMMER ANIMATION
+   ======================================== */
+@keyframes shimmer {
+  0% {
+    background-position: 200% center;
+  }
+  100% {
+    background-position: -200% center;
+  }
+}
+
+.loading-shimmer {
+  color: var(--muted-foreground);
+  background: linear-gradient(
+    90deg,
+    currentColor 0%,
+    currentColor 35%,
+    var(--foreground) 50%,
+    currentColor 65%,
+    currentColor 100%
+  );
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
 
 

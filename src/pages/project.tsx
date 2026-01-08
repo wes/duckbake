@@ -5,7 +5,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { listen } from "@tauri-apps/api/event";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import {
-	Database,
+	Folder,
 	Table,
 	MessageSquare,
 	Code,
@@ -17,6 +17,7 @@ import {
 	Pencil,
 	Loader2,
 	Sparkles,
+	Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,20 +38,38 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+	ContextMenu,
+	ContextMenuContent,
+	ContextMenuItem,
+	ContextMenuTrigger,
+} from "@/components/ui/context-menu";
 import { FileImportDialog, DropZone } from "@/components/import";
 import { TableViewer, VectorizationDialog } from "@/components/database";
 import { SqlEditor } from "@/components/query";
 import { ChatPanel } from "@/components/chat";
 import { SettingsDialog } from "@/components/settings";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
+import { SidebarItem } from "@/components/ui/sidebar-item";
+import {
+	DocumentUploadDialog,
+	DocumentList,
+	DocumentViewer,
+} from "@/components/documents";
 import {
 	openProject,
 	getTables,
 	getTableSchema,
 	listProjects,
 	updateProject,
+	deleteTable,
 } from "@/lib/tauri";
-import { useProjectStore, useAppStore, useVectorizationStore } from "@/stores";
+import {
+	useProjectStore,
+	useAppStore,
+	useVectorizationStore,
+	useDocumentStore,
+} from "@/stores";
 import type { VectorizationProgress } from "@/types";
 import { useThemeStore } from "@/stores/theme-store";
 
@@ -62,11 +81,13 @@ export function ProjectPage() {
 	const { setCurrentProject, selectedTable, selectTable } = useProjectStore();
 	const { mode } = useThemeStore();
 	const { setProgress, isVectorizing } = useVectorizationStore();
+	const { selectedDocument, selectDocument } = useDocumentStore();
 	const isDark =
 		mode === "dark" ||
 		(mode === "system" &&
 			window.matchMedia("(prefers-color-scheme: dark)").matches);
 	const [importDialogOpen, setImportDialogOpen] = useState(false);
+	const [documentUploadOpen, setDocumentUploadOpen] = useState(false);
 
 	// Listen for vectorization progress events globally
 	useEffect(() => {
@@ -91,6 +112,20 @@ export function ProjectPage() {
 	const [newName, setNewName] = useState("");
 	const [sidebarWidth, setSidebarWidth] = useState(256);
 	const isResizing = useRef(false);
+	const [deleteTableName, setDeleteTableName] = useState<string | null>(null);
+
+	const deleteTableMutation = useMutation({
+		mutationFn: async (tableName: string) => {
+			return deleteTable(id!, tableName);
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["tables", id] });
+			if (selectedTable === deleteTableName) {
+				selectTable(null);
+			}
+			setDeleteTableName(null);
+		},
+	});
 
 	const startResizing = useCallback((e: React.MouseEvent) => {
 		e.preventDefault();
@@ -102,7 +137,7 @@ export function ProjectPage() {
 	useEffect(() => {
 		const handleMouseMove = (e: MouseEvent) => {
 			if (!isResizing.current) return;
-			const newWidth = Math.min(Math.max(e.clientX, 180), 500);
+			const newWidth = Math.min(Math.max(e.clientX, 120), 500);
 			setSidebarWidth(newWidth);
 		};
 
@@ -213,30 +248,31 @@ export function ProjectPage() {
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
 							<button className="flex items-center gap-2 hover:bg-accent hover:text-accent-foreground px-2 py-1.5 rounded-md transition-colors group">
-								<Database className="h-4 w-4 text-muted-foreground group-hover:text-accent-foreground" />
+								<Folder className="h-5 w-5 text-primary" />
 								<span className="font-semibold">{project.name}</span>
 								<ChevronDown className="h-4 w-4 text-muted-foreground group-hover:text-accent-foreground" />
 							</button>
 						</DropdownMenuTrigger>
-						<DropdownMenuContent align="start" className="w-56">
+						<DropdownMenuContent align="start" className="w-72">
 							<DropdownMenuItem onClick={() => navigate("/")}>
 								<Home className="h-4 w-4 mr-2" />
 								All Projects
 							</DropdownMenuItem>
 							<DropdownMenuSeparator />
 							<DropdownMenuItem onClick={openRenameDialog}>
-								<Database className="h-4 w-4 mr-2 text-primary" />
+								<Folder className="h-4 w-4 mr-2 text-primary" />
 								<span className="flex-1">{project.name}</span>
 								<Pencil className="h-3.5 w-3.5 text-muted-foreground" />
 							</DropdownMenuItem>
 							{allProjects
 								.filter((p) => p.id !== id)
+								.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
 								.map((p) => (
 									<DropdownMenuItem
 										key={p.id}
 										onClick={() => navigate(`/project/${p.id}`)}
 									>
-										<Database className="h-4 w-4 mr-2 text-muted-foreground" />
+										<Folder className="h-4 w-4 mr-2 text-muted-foreground" />
 										{p.name}
 									</DropdownMenuItem>
 								))}
@@ -291,63 +327,93 @@ export function ProjectPage() {
 				{sidebarOpen && (
 					<>
 						<aside
-							className="border-r flex flex-col shrink-0"
+							className="border-r flex flex-col shrink-0 overflow-hidden"
 							style={{ width: sidebarWidth }}
 						>
-							<ScrollArea className="flex-1">
-								<div className="p-2">
-									{tablesLoading ? (
-										<div className="space-y-2">
-											{[1, 2, 3].map((i) => (
-												<div
-													key={i}
-													className="h-8 bg-muted rounded animate-pulse"
-												></div>
-											))}
-										</div>
-									) : tables.length === 0 ? (
-										<div className="py-4">
-											<DropZone projectId={id!} />
-										</div>
-									) : (
-										<div className="space-y-0">
-											{tables.map((table) => {
-												const vectorizing = isVectorizing(table.name);
-												return (
-													<button
-														type="button"
-														key={table.name}
-														className={`w-full text-left px-3 py-1 rounded-md text-md flex items-center gap-2 transition-colors cursor-pointer ${
-															selectedTable === table.name
-																? "bg-muted text-foreground"
-																: "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-														}`}
-														onClick={() => {
-															selectTable(table.name);
-															setActiveTab("browser");
-														}}
-													>
-														<Table className="h-4 w-4 shrink-0" />
-														<span className="truncate flex-1 min-w-0 font-semibold">
-															{table.name}
-														</span>
-														{vectorizing ? (
-															<Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-primary" />
-														) : table.isVectorized ? (
-															<Sparkles className="h-3.5 w-3.5 shrink-0 text-primary" />
-														) : (
-															<span className="opacity-60 shrink-0">
-																{table.rowCount.toLocaleString()}
-															</span>
-														)}
-													</button>
-												);
-											})}
-											<div className="pt-4">
+							<ScrollArea className="flex-1 w-full">
+								<div className="p-2 overflow-hidden">
+									{/* Tables Section */}
+									<div className="mb-4">
+										{(tablesLoading || tables.length > 0) && (
+											<h3 className="px-3 py-1 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+												Tables
+											</h3>
+										)}
+										{tablesLoading ? (
+											<div className="space-y-2">
+												{[1, 2, 3].map((i) => (
+													<div
+														key={i}
+														className="h-8 bg-muted rounded animate-pulse"
+													></div>
+												))}
+											</div>
+										) : tables.length === 0 ? (
+											<div className="py-2">
 												<DropZone projectId={id!} />
 											</div>
-										</div>
-									)}
+										) : (
+											<div className="space-y-0">
+												{tables.map((table) => {
+													const vectorizing = isVectorizing(table.name);
+													return (
+														<ContextMenu key={table.name}>
+															<ContextMenuTrigger asChild>
+																<div className="w-full overflow-hidden">
+																	<SidebarItem
+																		icon={<Table className="h-4 w-4" />}
+																		name={table.name}
+																		selected={
+																			selectedTable === table.name &&
+																			!selectedDocument
+																		}
+																		onClick={() => {
+																			selectTable(table.name);
+																			selectDocument(null);
+																			setActiveTab("browser");
+																		}}
+																		statusElement={
+																			vectorizing ? (
+																				<Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+																			) : table.isVectorized ? (
+																				<Sparkles className="h-3.5 w-3.5 text-primary" />
+																			) : (
+																				<span className="opacity-60">
+																					{table.rowCount.toLocaleString()}
+																				</span>
+																			)
+																		}
+																	/>
+																</div>
+															</ContextMenuTrigger>
+															<ContextMenuContent>
+																<ContextMenuItem
+																	className="text-destructive focus:text-destructive"
+																	onClick={() => setDeleteTableName(table.name)}
+																>
+																	<Trash2 className="h-4 w-4 mr-2" />
+																	Delete Table
+																</ContextMenuItem>
+															</ContextMenuContent>
+														</ContextMenu>
+													);
+												})}
+												<div className="pt-2">
+													<DropZone projectId={id!} />
+												</div>
+											</div>
+										)}
+									</div>
+
+									{/* Documents Section */}
+									<DocumentList
+										projectId={id!}
+										onUploadClick={() => setDocumentUploadOpen(true)}
+										onSelectDocument={() => {
+											selectTable(null);
+											setActiveTab("browser");
+										}}
+									/>
 								</div>
 							</ScrollArea>
 						</aside>
@@ -363,7 +429,9 @@ export function ProjectPage() {
 				<main className="flex-1 flex flex-col min-h-0 overflow-hidden">
 					<TabsContent value="browser" className="flex-1 m-0 overflow-hidden">
 						<ErrorBoundary>
-							{selectedTable ? (
+							{selectedDocument ? (
+								<DocumentViewer projectId={id!} documentId={selectedDocument} />
+							) : selectedTable ? (
 								<TableViewer
 									projectId={id!}
 									tableName={selectedTable}
@@ -375,9 +443,12 @@ export function ProjectPage() {
 							) : (
 								<div className="flex flex-col items-center justify-center h-full text-center">
 									<Table className="h-12 w-12 text-muted-foreground mb-4" />
-									<h3 className="font-medium mb-1">Select a table</h3>
+									<h3 className="font-medium mb-1">
+										Select a table or document
+									</h3>
 									<p className="text-sm text-muted-foreground">
-										Choose a table from the sidebar to view its data
+										Choose a table or document from the sidebar to view its
+										content
 									</p>
 								</div>
 							)}
@@ -468,6 +539,13 @@ export function ProjectPage() {
 				onOpenChange={setImportDialogOpen}
 			/>
 
+			{/* Document Upload Dialog */}
+			<DocumentUploadDialog
+				projectId={id!}
+				open={documentUploadOpen}
+				onOpenChange={setDocumentUploadOpen}
+			/>
+
 			{/* Vectorization Dialog */}
 			{vectorizeTable && (
 				<VectorizationDialog
@@ -514,6 +592,36 @@ export function ProjectPage() {
 							disabled={!newName.trim() || renameMutation.isPending}
 						>
 							{renameMutation.isPending ? "Saving..." : "Save"}
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
+
+			{/* Delete Table Dialog */}
+			<Dialog
+				open={!!deleteTableName}
+				onOpenChange={(open) => !open && setDeleteTableName(null)}
+			>
+				<DialogContent>
+					<DialogHeader>
+						<DialogTitle>Delete Table</DialogTitle>
+						<DialogDescription>
+							Are you sure you want to delete the table "{deleteTableName}"?
+							This action cannot be undone.
+						</DialogDescription>
+					</DialogHeader>
+					<DialogFooter>
+						<Button variant="outline" onClick={() => setDeleteTableName(null)}>
+							Cancel
+						</Button>
+						<Button
+							variant="destructive"
+							onClick={() =>
+								deleteTableName && deleteTableMutation.mutate(deleteTableName)
+							}
+							disabled={deleteTableMutation.isPending}
+						>
+							{deleteTableMutation.isPending ? "Deleting..." : "Delete"}
 						</Button>
 					</DialogFooter>
 				</DialogContent>

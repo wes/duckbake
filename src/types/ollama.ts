@@ -10,6 +10,13 @@ export interface OllamaModel {
   modifiedAt: string;
 }
 
+export interface OllamaPullProgress {
+  status: string;
+  digest?: string;
+  total?: number;
+  completed?: number;
+}
+
 export interface ChatMessage {
   id: string;
   role: "user" | "assistant";

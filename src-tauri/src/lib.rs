@@ -13,19 +13,33 @@ use tauri::Emitter;
 pub fn run() {
     let app_state = AppState::new().expect("Failed to initialize app state");
 
-    tauri::Builder::default()
+    let mut builder = tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
-        .plugin(tauri_plugin_updater::Builder::new().build())
-        .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_window_state::Builder::new().build());
+
+    #[cfg(feature = "updater")]
+    {
+        builder = builder
+            .plugin(tauri_plugin_updater::Builder::new().build())
+            .plugin(tauri_plugin_process::init());
+    }
+
+    builder
         .setup(|app| {
-            let app_submenu = SubmenuBuilder::new(app, "DuckBake")
-                .about(None)
-                .item(
+            let mut app_submenu_builder = SubmenuBuilder::new(app, "DuckBake")
+                .about(None);
+
+            #[cfg(feature = "updater")]
+            {
+                app_submenu_builder = app_submenu_builder.item(
                     &MenuItemBuilder::with_id("check_for_updates", "Check for Updates...")
                         .build(app)?,
-                )
+                );
+            }
+
+            let app_submenu = app_submenu_builder
                 .separator()
                 .services()
                 .separator()
@@ -86,6 +100,7 @@ pub fn run() {
                 "open_project" => {
                     let _ = app.emit("menu-open-project", ());
                 }
+                #[cfg(feature = "updater")]
                 "check_for_updates" => {
                     let _ = app.emit("menu-check-for-updates", ());
                 }
@@ -101,11 +116,14 @@ pub fn run() {
             delete_project,
             update_project,
             get_all_project_stats,
+            export_project,
+            import_project,
             // Database commands
             get_tables,
             get_table_schema,
             execute_query,
             query_table,
+            delete_table,
             get_project_context,
             // Import commands
             preview_import,
@@ -115,6 +133,8 @@ pub fn run() {
             check_ollama_status,
             list_ollama_models,
             send_chat_message,
+            pull_ollama_model,
+            delete_ollama_model,
             // Vectorization commands
             get_vectorization_status,
             get_text_columns,
@@ -134,6 +154,15 @@ pub fn run() {
             save_query,
             update_saved_query,
             delete_saved_query,
+            // Document commands
+            upload_document,
+            get_documents,
+            get_document,
+            delete_document,
+            vectorize_document,
+            get_supported_document_extensions,
+            semantic_search_documents,
+            get_document_chunks_by_id,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

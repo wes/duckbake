@@ -1,68 +1,52 @@
 #!/bin/bash
+# Build script for Mac App Store submission
+# This temporarily removes updater-related code to comply with App Store guidelines
+
 set -e
 
-# App Store Build Script for DuckBake
-#
-# Prerequisites:
-# 1. Install certificates in Keychain:
-#    - "3rd Party Mac Developer Application: Your Name (TEAM_ID)"
-#    - "3rd Party Mac Developer Installer: Your Name (TEAM_ID)"
-# 2. Download provisioning profile to src-tauri/profiles/appstore.provisionprofile
-# 3. Update YOUR_TEAM_ID in src-tauri/Entitlements.plist
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
+CAPABILITIES_DIR="$PROJECT_DIR/src-tauri/capabilities"
 
-APP_NAME="DuckBake"
-BUNDLE_PATH="src-tauri/target/universal-apple-darwin/release/bundle/macos/${APP_NAME}.app"
-PKG_NAME="${APP_NAME}.pkg"
+echo "🍎 Building for Mac App Store..."
 
-echo "=== Building App Store version of ${APP_NAME} ==="
-
-# Step 1: Build the app bundle
-echo ""
-echo "Step 1: Building universal app bundle..."
-bunx tauri build --bundles app --target universal-apple-darwin --config src-tauri/tauri.appstore.conf.json
-
-if [ ! -d "$BUNDLE_PATH" ]; then
-    echo "Error: App bundle not found at $BUNDLE_PATH"
-    exit 1
+# Backup the default capability (has updater permissions)
+if [ -f "$CAPABILITIES_DIR/default.json" ]; then
+    mv "$CAPABILITIES_DIR/default.json" "$CAPABILITIES_DIR/default.json.direct"
+    echo "✓ Backed up default.json"
 fi
 
-echo "App bundle created at: $BUNDLE_PATH"
-
-# Step 2: Find the installer signing identity
-echo ""
-echo "Step 2: Looking for installer signing identity..."
-INSTALLER_IDENTITY=$(security find-identity -v -p basic | grep "3rd Party Mac Developer Installer" | head -1 | sed 's/.*"\(.*\)".*/\1/')
-
-if [ -z "$INSTALLER_IDENTITY" ]; then
-    echo "Error: No '3rd Party Mac Developer Installer' certificate found in Keychain"
-    echo ""
-    echo "To fix this:"
-    echo "1. Go to https://developer.apple.com/account/resources/certificates"
-    echo "2. Create a 'Mac Installer Distribution' certificate"
-    echo "3. Download and double-click to install in Keychain"
-    exit 1
+# Move appstore capability to default (using mv, not cp, to avoid duplicate identifiers)
+if [ -f "$CAPABILITIES_DIR/appstore.json" ]; then
+    mv "$CAPABILITIES_DIR/appstore.json" "$CAPABILITIES_DIR/default.json"
+    echo "✓ Using appstore capabilities"
 fi
 
-echo "Using installer identity: $INSTALLER_IDENTITY"
+# Build function with cleanup on exit
+cleanup() {
+    echo "🧹 Restoring original capabilities..."
+    # Restore appstore.json from default.json
+    if [ -f "$CAPABILITIES_DIR/default.json" ]; then
+        mv "$CAPABILITIES_DIR/default.json" "$CAPABILITIES_DIR/appstore.json"
+    fi
+    # Restore original default.json
+    if [ -f "$CAPABILITIES_DIR/default.json.direct" ]; then
+        mv "$CAPABILITIES_DIR/default.json.direct" "$CAPABILITIES_DIR/default.json"
+    fi
+    echo "✓ Restored capabilities"
+}
 
-# Step 3: Create the signed .pkg
-echo ""
-echo "Step 3: Creating signed .pkg installer..."
-xcrun productbuild \
-    --sign "$INSTALLER_IDENTITY" \
-    --component "$BUNDLE_PATH" /Applications \
-    "$PKG_NAME"
+# Register cleanup to run on exit
+trap cleanup EXIT
 
-echo ""
-echo "=== Build Complete ==="
-echo "Created: $PKG_NAME"
-echo ""
-echo "Next steps:"
-echo "1. Open Transporter app (download from Mac App Store)"
-echo "2. Sign in with your Apple Developer account"
-echo "3. Drag $PKG_NAME into Transporter"
-echo "4. Click 'Deliver' to upload to App Store Connect"
-echo ""
-echo "Or upload via command line:"
-echo "  xcrun altool --upload-app --type macos --file $PKG_NAME \\"
-echo "    --apiKey YOUR_API_KEY_ID --apiIssuer YOUR_ISSUER_ID"
+# Build without updater feature
+echo "🔨 Building app..."
+cd "$PROJECT_DIR"
+cargo tauri build \
+    -f appstore \
+    -c src-tauri/tauri.appstore.conf.json \
+    "$@" \
+    -- --no-default-features
+
+echo "✅ App Store build complete!"
+echo "📦 Output is in src-tauri/target/release/bundle/"
