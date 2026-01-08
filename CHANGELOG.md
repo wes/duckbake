@@ -2,6 +2,11 @@
 
 All notable changes to DuckBake will be documented in this file.
 
+## [0.0.38] - 2026-01-08
+
+### Changes
+
+- Macos build
 ## [0.0.37] - 2026-01-08
 
 ### Changes
