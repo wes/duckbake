@@ -59,15 +59,37 @@ pub async fn get_all_project_stats(state: State<'_, AppState>) -> Result<Vec<Pro
 
     for project_summary in projects {
         let storage = state.storage.lock();
-        let project = storage.get_project(&project_summary.id)?;
+        let project = match storage.get_project(&project_summary.id) {
+            Ok(p) => p,
+            Err(e) => {
+                eprintln!("[stats] Failed to get project {}: {}", project_summary.id, e);
+                continue;
+            }
+        };
         let db_path = storage.get_database_path(&project);
         drop(storage);
 
-        let conn = state.duckdb.get_connection(&project_summary.id, &db_path)?;
+        let conn = match state.duckdb.get_connection(&project_summary.id, &db_path) {
+            Ok(c) => c,
+            Err(e) => {
+                eprintln!("[stats] Failed to connect to database for {}: {}", project_summary.id, e);
+                // Return stats with zeros if we can't connect
+                all_stats.push(ProjectStats {
+                    project_id: project_summary.id,
+                    table_count: 0,
+                    total_rows: 0,
+                    conversation_count: 0,
+                    saved_query_count: 0,
+                    document_count: 0,
+                    storage_size: fs::metadata(&db_path).map(|m| m.len()).unwrap_or(0),
+                });
+                continue;
+            }
+        };
         let conn = conn.lock();
 
         // Ensure metadata tables exist before querying them
-        conn.execute_batch(
+        if let Err(e) = conn.execute_batch(
             r#"
             CREATE TABLE IF NOT EXISTS _duckbake_conversations (
                 id VARCHAR PRIMARY KEY,
@@ -99,12 +121,22 @@ pub async fn get_all_project_stats(state: State<'_, AppState>) -> Result<Vec<Pro
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
             "#,
-        )?;
+        ) {
+            eprintln!("[stats] Failed to create metadata tables for {}: {}", project_summary.id, e);
+        }
 
         // Get table count and total rows
-        let tables = state.duckdb.get_tables(&conn)?;
-        let table_count = tables.len() as u32;
-        let total_rows: u64 = tables.iter().map(|t| t.row_count as u64).sum();
+        let (table_count, total_rows) = match state.duckdb.get_tables(&conn) {
+            Ok(tables) => {
+                let count = tables.len() as u32;
+                let rows: u64 = tables.iter().map(|t| t.row_count as u64).sum();
+                (count, rows)
+            }
+            Err(e) => {
+                eprintln!("[stats] Failed to get tables for {}: {}", project_summary.id, e);
+                (0, 0)
+            }
+        };
 
         // Get conversation count
         let conversation_count: u32 = conn
