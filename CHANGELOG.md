@@ -2,6 +2,11 @@
 
 All notable changes to DuckBake will be documented in this file.
 
+## [0.0.42] - 2026-01-09
+
+### Bug Fixes
+
+- Fixing scrollbar styles, fixing chat panel and table header styles from too much blur on apple glass
 ## [0.0.41] - 2026-01-09
 
 ### Bug Fixes
