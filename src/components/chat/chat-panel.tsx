@@ -978,7 +978,7 @@ export function ChatPanel({ projectId }: ChatPanelProps) {
 				</div>
 
 				{/* Messages */}
-				<div className="flex-1 min-h-0 overflow-y-auto" ref={scrollRef}>
+				<div className="flex-1 min-h-0 overflow-y-auto chat-scroll" ref={scrollRef}>
 					<div className="p-4 space-y-4">
 						{messages.length === 0 && !isStreaming && (
 							<div className="text-center text-muted-foreground py-8">
