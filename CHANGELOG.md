@@ -2,6 +2,11 @@
 
 All notable changes to DuckBake will be documented in this file.
 
+## [0.0.41] - 2026-01-09
+
+### Bug Fixes
+
+- Fixing project stats again
 ## [0.0.39] - 2026-01-08
 
 ### Bug Fixes
