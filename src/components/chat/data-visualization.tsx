@@ -258,7 +258,7 @@ function DataTable({ result }: { result: QueryResult }) {
 
 	return (
 		<div className="overflow-x-auto max-h-80 overflow-y-auto">
-			<table className="min-w-full border-collapse text-xs">
+			<table className="min-w-full border-collapse text-xs data-table-selectable">
 				<thead className="sticky top-0 bg-muted">
 					<tr>
 						{result.columns.map((col) => (

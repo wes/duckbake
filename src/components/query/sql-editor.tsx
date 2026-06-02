@@ -123,13 +123,22 @@ export function SqlEditor({ projectId }: SqlEditorProps) {
       EditorView.theme({
         "&": { backgroundColor: "transparent !important" },
         "&.cm-editor": { backgroundColor: "transparent !important" },
+        "&.cm-editor.cm-focused .cm-selectionBackground": { 
+          backgroundColor: isDark ? "rgba(10, 122, 255, 0.4)" : "rgba(0, 122, 255, 0.35)" 
+        },
+        "&.cm-editor .cm-selectionLayer .cm-selectionBackground": { 
+          backgroundColor: isDark ? "rgba(10, 122, 255, 0.4)" : "rgba(0, 122, 255, 0.35)" 
+        },
         ".cm-scroller": { backgroundColor: "transparent !important" },
         ".cm-gutters": { backgroundColor: "transparent !important", borderRight: "none" },
         ".cm-content": { backgroundColor: "transparent !important" },
+        ".cm-content ::selection": { 
+          backgroundColor: isDark ? "rgba(10, 122, 255, 0.4) !important" : "rgba(0, 122, 255, 0.35) !important" 
+        },
         ".cm-activeLine": { backgroundColor: "transparent !important" },
         ".cm-activeLineGutter": { backgroundColor: "transparent !important" },
       }),
-    []
+    [isDark]
   );
 
   const executeMutation = useMutation({
