@@ -81,6 +81,12 @@ bun run release
 bun run release:mac
 ```
 
+## RELEASING TO APP STORE
+
+```
+bun run release:appstore
+```
+
 ## Tech Stack
 
 **Frontend**
