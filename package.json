@@ -1,7 +1,7 @@
 {
   "name": "duckbake",
   "private": true,
-  "version": "45",
+  "version": "45.undefined.NaN",
   "type": "module",
   "scripts": {
     "dev": "vite",
