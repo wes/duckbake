@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "DuckBake",
-  "version": "45.undefined.NaN",
+  "version": "45.NaN.NaN",
   "identifier": "com.joedesigns.duckbake",
   "build": {
     "beforeDevCommand": "bun run dev",
